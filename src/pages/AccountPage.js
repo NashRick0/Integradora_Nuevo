@@ -3,54 +3,62 @@ import {
   Form,
   Input,
   Button,
-  DatePicker,
-  Row,
-  Col,
   Typography,
   Card,
   Spin,
-  message,
+  Divider,
+  Descriptions, // <-- Importa Descriptions
 } from 'antd';
-import { UserOutlined, MailOutlined } from '@ant-design/icons';
-import { getMyProfile } from '../services/api';
-import dayjs from 'dayjs'; // Librería para manejar fechas fácilmente
+import { LockOutlined } from '@ant-design/icons';
+import { getMyProfile, changePassword } from '../services/api'; // <-- Cambia a changePassword
+import { useAuth } from '../context/AuthContext';
+import dayjs from 'dayjs';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 
+const MySwal = withReactContent(Swal);
 const { Title } = Typography;
 
 const AccountPage = () => {
-  const [form] = Form.useForm();
+  const { user } = useAuth();
+  const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data } = await getMyProfile();
+    if (user) {
+      getMyProfile().then(({ data }) => {
         setUserData(data);
-        // Llenamos el formulario con los datos recibidos
-        form.setFieldsValue({
-          nombre: data.nombre,
-          apellidoPaterno: data.apellidoPaterno,
-          apellidoMaterno: data.apellidoMaterno,
-          correo: data.correo,
-          // Convertimos la fecha a un objeto dayjs para el DatePicker
-          fechaNacimiento: data.fechaNacimiento ? dayjs(data.fechaNacimiento) : null,
-        });
-      } catch (error) {
-        message.error('No se pudo cargar la información del perfil.');
-        console.error(error);
-      } finally {
         setLoading(false);
+      }).catch(() => {
+        MySwal.fire('Error', 'No se pudo cargar la información del perfil.', 'error');
+        setLoading(false);
+      });
+    }
+  }, [user]);
+
+  const handleChangePassword = async () => {
+    try {
+      const values = await passwordForm.validateFields();
+      
+      // El payload ahora solo contiene las contraseñas
+      const payload = {
+        contraseña: values.contraseña,
+        anteriorContraseña: values.anteriorContraseña,
+      };
+      
+      await changePassword(user._id, payload);
+      await MySwal.fire('¡Éxito!', 'Tu contraseña ha sido actualizada.', 'success');
+      passwordForm.resetFields();
+
+    } catch (errorInfo) {
+      if (errorInfo.errorFields) {
+        MySwal.fire('Campos Incompletos', 'Debes proporcionar la contraseña actual y la nueva.', 'error');
+      } else {
+        const errorMessage = errorInfo.response?.data?.message || 'Ocurrió un problema al guardar.';
+        MySwal.fire('Error al Guardar', errorMessage, 'error');
       }
-    };
-
-    fetchProfile();
-  }, [form]);
-
-  const onFinish = (values) => {
-    // Aquí iría la lógica para actualizar el perfil del usuario
-    console.log('Valores a actualizar:', values);
-    message.success('Perfil actualizado con éxito (simulación).');
+    }
   };
 
   if (loading) {
@@ -63,44 +71,41 @@ const AccountPage = () => {
 
   return (
     <Card>
-      <Title level={3}>Mi Cuenta</Title>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        initialValues={userData}
-      >
-        <Row gutter={24}>
-          <Col xs={24} sm={12} md={8}>
-            <Form.Item name="nombre" label="Nombre(s)" rules={[{ required: true }]}>
-              <Input prefix={<UserOutlined />} />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Form.Item name="apellidoPaterno" label="Apellido Paterno" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Form.Item name="apellidoMaterno" label="Apellido Materno" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} md={12}>
-            <Form.Item name="correo" label="Correo Electrónico" rules={[{ required: true, type: 'email' }]}>
-              <Input prefix={<MailOutlined />} disabled />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} md={12}>
-            <Form.Item name="fechaNacimiento" label="Fecha de Nacimiento">
-              <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
-            </Form.Item>
-          </Col>
-        </Row>
+      <Title level={3} style={{ marginBottom: '24px' }}>Mi Cuenta</Title>
+      
+      {/* --- Datos del Perfil (Solo Lectura) --- */}
+      <Title level={5}>Datos Personales</Title>
+      {userData && (
+          <Descriptions bordered column={1} size="small">
+              <Descriptions.Item label="Nombre Completo">{`${userData.nombre} ${userData.apellidoPaterno} ${userData.apellidoMaterno}`}</Descriptions.Item>
+              <Descriptions.Item label="Correo">{userData.correo}</Descriptions.Item>
+              <Descriptions.Item label="Fecha de Nacimiento">{dayjs(userData.fechaNacimiento).format('DD/MM/YYYY')}</Descriptions.Item>
+          </Descriptions>
+      )}
+
+      <Divider />
+
+      {/* --- Formulario para Cambiar Contraseña --- */}
+      <Form form={passwordForm} layout="vertical" onFinish={handleChangePassword}>
+        <Title level={5}>Cambiar Contraseña</Title>
+        <Form.Item
+          name="anteriorContraseña"
+          label="Contraseña Actual"
+          rules={[{ required: true, message: 'Por favor, ingresa tu contraseña actual.' }]}
+        >
+          <Input.Password prefix={<LockOutlined />} placeholder="Ingresa tu contraseña actual" />
+        </Form.Item>
+        <Form.Item
+          name="contraseña"
+          label="Nueva Contraseña"
+          rules={[{ required: true, message: 'Por favor, ingresa tu nueva contraseña.' }]}
+        >
+          <Input.Password prefix={<LockOutlined />} placeholder="Ingresa la nueva contraseña" />
+        </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" style={{ background: '#d9363e' }}>
-            Guardar Cambios
-          </Button>
+            <Button type="primary" htmlType="submit" style={{ background: '#d9363e' }}>
+                Cambiar Contraseña
+            </Button>
         </Form.Item>
       </Form>
     </Card>

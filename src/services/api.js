@@ -25,6 +25,7 @@ export const getUsuarios = () => api.get('/usuarios');
 export const getMyProfile = () => api.get('/usuarios/login');
 export const addUsuario = (userData) => api.post('/usuarios', userData);
 export const deleteUsuario = (userId) => api.delete(`/usuarios/${userId}`);
+export const changePassword = (userId, passwordData) => api.put(`/usuarios/${userId}`, passwordData);
 // --- Servicios de Análisis ---
 export const getAnalisis = () => api.get('/analisis');
 export const addAnalisis = (analisisData) => api.post('/analisis', analisisData);
@@ -39,7 +40,10 @@ export const updatePedido = (orderId, orderData) => api.put(`/pedidos/${orderId}
 export const getMuestras = () => api.get('/muestras');
 export const takeSample = (sampleData) => api.post('/muestras', sampleData);
 export const registerSampleResults = (sampleId, resultsData) => api.post(`/muestras/resultados/${sampleId}`, resultsData);
-// --- Nueva función para resetear el LDR ---
+export const updateSample = (sampleId, sampleData) => api.put(`/muestras/${sampleId}`, sampleData);
+export const updateSampleResults = (sampleId, resultsData) => api.put(`/muestras/resultados/${sampleId}`, resultsData);
+export const deleteSample = (sampleId) => api.delete(`/muestras/${sampleId}`);
+// --- Nueva función LDR ---
 export const resetLdrDevice = (deviceId) => api.delete(`/ldr/${deviceId}`);
 
 export default api;

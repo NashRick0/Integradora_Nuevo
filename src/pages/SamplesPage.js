@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Card, Button, Input, Tabs, Typography, Space, Empty, Spin, Tooltip, Modal, Form, Pagination } from 'antd'; // <-- Importa Pagination
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, FilePdfOutlined, ExperimentOutlined, SolutionOutlined } from '@ant-design/icons'; // <-- Importa nuevo ícono
-import { getMuestras, getPedidos, takeSample, registerSampleResults } from '../services/api';
+import { Row, Col, Card, Button, Input, Tabs, Typography, Space, Empty, Spin, Tooltip, Modal, Form, Pagination, Dropdown, Menu } from 'antd';
+import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, ExperimentOutlined, SolutionOutlined } from '@ant-design/icons';
+import { getMuestras, getPedidos, takeSample, registerSampleResults, updateSample, updateSampleResults, deleteSample } from '../services/api';
 import TakeSampleForm from '../components/samples/TakeSampleForm';
 import RegisterResultsForm from '../components/samples/RegisterResultsForm';
+import EditSampleForm from '../components/samples/EditSampleForm';
+import SampleResultDetail from '../components/samples/SampleResultDetail';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
@@ -21,15 +23,19 @@ const SamplesPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todos');
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1); // <-- Estado para paginación
-  const pageSize = 6; // <-- Tarjetas por página
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
   
   const [isTakeSampleModalVisible, setTakeSampleModalVisible] = useState(false);
   const [isRegisterResultsModalVisible, setRegisterResultsModalVisible] = useState(false);
+  const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
+  const [isEditSampleModalVisible, setIsEditSampleModalVisible] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [pendingOrders, setPendingOrders] = useState([]);
+  
   const [takeSampleForm] = Form.useForm();
   const [registerResultsForm] = Form.useForm();
+  const [editSampleForm] = Form.useForm();
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -48,26 +54,20 @@ const SamplesPage = () => {
     fetchInitialData();
   }, []);
 
-  // --- LÓGICA DE FILTRADO CORREGIDA ---
   const filteredSamples = useMemo(() => {
     return samples.filter(sample => {
-      // Filtro por Pestaña
       switch (filter) {
         case 'con-resultados':
           if (!(sample.status === true && sample.statusShowClient === true)) return false;
           break;
-        case 'activo': // En Proceso
+        case 'activo':
           if (!(sample.status === true && sample.statusShowClient === false)) return false;
           break;
         case 'cancelado':
           if (sample.status !== false) return false;
           break;
-        case 'todos':
-        default:
-          break; // No aplicar filtro de estado
+        default: break;
       }
-
-      // Filtro por Búsqueda
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase();
         const sampleIdMatch = sample._id.slice(-6).toLowerCase().includes(lowerSearchTerm);
@@ -78,7 +78,6 @@ const SamplesPage = () => {
     });
   }, [samples, filter, searchTerm]);
 
-  // --- PAGINACIÓN AÑADIDA ---
   const paginatedSamples = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredSamples.slice(startIndex, startIndex + pageSize);
@@ -101,41 +100,96 @@ const SamplesPage = () => {
       await MySwal.fire('¡Muestra Tomada!', 'La muestra ha sido registrada.', 'success');
       fetchInitialData();
     } catch (errorInfo) {
+      if (errorInfo.errorFields) return;
       const errorMessage = errorInfo.response?.data?.message || 'Ocurrió un problema.';
       MySwal.fire('Error', errorMessage, 'error');
     }
   };
 
-  const handleRegisterResults = async () => {
+  const handleRegisterOrUpdateResults = async () => {
     try {
         const values = await registerResultsForm.validateFields();
-        await registerSampleResults(selectedSample._id, values);
+        const apiCall = selectedSample.statusShowClient 
+            ? updateSampleResults(selectedSample._id, values)
+            : registerSampleResults(selectedSample._id, values);
+
+        await apiCall;
         setRegisterResultsModalVisible(false);
         registerResultsForm.resetFields();
-        await MySwal.fire('¡Resultados Registrados!', 'Los resultados han sido guardados.', 'success');
+        await MySwal.fire('¡Éxito!', `Los resultados han sido ${selectedSample.statusShowClient ? 'actualizados' : 'registrados'}.`, 'success');
         fetchInitialData();
     } catch (errorInfo) {
+        if (errorInfo.errorFields) return;
+        const errorMessage = errorInfo.response?.data?.message || 'Ocurrió un problema.';
+        MySwal.fire('Error', errorMessage, 'error');
+    }
+  };
+
+  const handleEditSample = async () => {
+    try {
+        const values = await editSampleForm.validateFields();
+        await updateSample(selectedSample._id, values);
+        setIsEditSampleModalVisible(false);
+        editSampleForm.resetFields();
+        await MySwal.fire('¡Muestra Actualizada!', 'La información de la muestra ha sido actualizada.', 'success');
+        fetchInitialData();
+    } catch (errorInfo) {
+        if (errorInfo.errorFields) return;
         const errorMessage = errorInfo.response?.data?.message || 'Ocurrió un problema.';
         MySwal.fire('Error', errorMessage, 'error');
     }
   };
   
-  const showRegisterResultsModal = (sample) => {
+  const handleDelete = (sample) => {
+    MySwal.fire({
+      title: '¿Estás seguro?',
+      text: `Se dará de baja la muestra M${sample._id.slice(-6).toUpperCase()}. Esta acción no se puede revertir.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, ¡dar de baja!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteSample(sample._id).then(async () => {
+          await MySwal.fire(
+            '¡Dado de baja!',
+            'La muestra ha sido dada de baja.',
+            'success'
+          );
+          fetchInitialData(); // Refresca la lista de muestras
+        }).catch((error) => {
+          const errorMessage = error.response?.data?.message || 'No se pudo dar de baja la muestra.';
+          MySwal.fire('Error', errorMessage, 'error');
+        });
+      }
+    });
+  };
+
+  const showRegisterOrEditResultsModal = (sample) => {
     setSelectedSample(sample);
-    registerResultsForm.resetFields();
+    if (sample.statusShowClient && (sample.quimicaSanguinea || sample.biometriaHematica)) {
+        registerResultsForm.setFieldsValue(sample.quimicaSanguinea ? { quimicaSanguinea: sample.quimicaSanguinea } : { biometriaHematica: sample.biometriaHematica });
+    } else {
+        registerResultsForm.resetFields();
+    }
     setRegisterResultsModalVisible(true);
   };
   
-  // Lógica para el botón de edición
-  const handleEditClick = (sample) => {
-    // Si la muestra tiene `statusShowClient: true` significa que ya tiene resultados
-    if (sample.statusShowClient) {
-      // Lógica para editar resultados (futuro)
-      MySwal.fire('Función no disponible', 'La edición de resultados se implementará próximamente.', 'info');
-    } else {
-      // Si no, abre el modal para registrar resultados
-      showRegisterResultsModal(sample);
-    }
+  const showEditSampleModal = (sample) => {
+    setSelectedSample(sample);
+    editSampleForm.setFieldsValue({
+        nombrePaciente: sample.nombrePaciente,
+        pedidoId: sample.pedidoId,
+        observaciones: sample.observaciones,
+    });
+    setIsEditSampleModalVisible(true);
+  };
+
+  const showDetailsModal = (sample) => {
+    setSelectedSample(sample);
+    setIsDetailsModalVisible(true);
   };
   
   return (
@@ -160,41 +214,46 @@ const SamplesPage = () => {
       {loading ? <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div> : (
         <>
           <Row gutter={[16, 24]}>
-            {paginatedSamples.length > 0 ? (
-              paginatedSamples.map(sample => {
-                const hasResults = sample.statusShowClient;
-                return (
-                  <Col xs={24} sm={12} md={8} key={sample._id}>
-                    <Card
-                      title={<Space><ExperimentOutlined />{`M${sample._id.slice(-6).toUpperCase()}`}</Space>}
-                      actions={[
-                        // --- LÓGICA DE ICONO CORREGIDA ---
-                        <Tooltip title={hasResults ? "Editar Resultados" : "Registrar Resultados"}>
-                          <Button 
-                            type="text" 
-                            icon={hasResults ? <SolutionOutlined /> : <EditOutlined />} 
-                            key="edit" 
-                            onClick={() => handleEditClick(sample)} 
-                          />
-                        </Tooltip>,
-                        <Tooltip title="Ver PDF (Próximamente)"><Button type="text" icon={<FilePdfOutlined />} key="results" /></Tooltip>,
-                        <Tooltip title="Eliminar Muestra"><Button type="text" danger icon={<DeleteOutlined />} key="delete" /></Tooltip>,
-                      ]}
-                    >
-                      <Text strong>{sampleTypeNames[sample.tipoMuestra] || 'Análisis'}</Text><br />
-                      <Text type="secondary">{sample.nombrePaciente}</Text>
-                    </Card>
-                  </Col>
-                );
-              })
-            ) : (
-              <Col span={24} style={{ textAlign: 'center', marginTop: '48px' }}>
-                <Empty description="No se encontraron muestras que coincidan con los filtros." />
-              </Col>
-            )}
+            {paginatedSamples.map(sample => {
+              const isEnProceso = sample.status === true && sample.statusShowClient === false;
+              const isConResultados = sample.status === true && sample.statusShowClient === true;
+
+              const menu = (
+                <Menu>
+                  <Menu.Item key="editInfo" icon={<EditOutlined />} onClick={() => showEditSampleModal(sample)} disabled={!isEnProceso}>
+                    Editar Información
+                  </Menu.Item>
+                  <Menu.Item key="registerResults" icon={<SolutionOutlined />} onClick={() => showRegisterOrEditResultsModal(sample)} disabled={!isEnProceso}>
+                    Registrar Resultados
+                  </Menu.Item>
+                  <Menu.Item key="editResults" icon={<SolutionOutlined />} onClick={() => showRegisterOrEditResultsModal(sample)} disabled={!isConResultados}>
+                    Editar Resultados
+                  </Menu.Item>
+                </Menu>
+              );
+
+              return (
+                <Col xs={24} sm={12} md={8} key={sample._id}>
+                  <Card
+                    title={<Space><ExperimentOutlined />{`M${sample._id.slice(-6).toUpperCase()}`}</Space>}
+                    actions={[
+                      <Dropdown overlay={menu} trigger={['click']}>
+                        <Tooltip title="Acciones"><Button type="text" icon={<EditOutlined />} /></Tooltip>
+                      </Dropdown>,
+                      <Tooltip title="Ver Detalles"><Button type="text" icon={<FileTextOutlined />} onClick={() => showDetailsModal(sample)} /></Tooltip>,
+                      <Tooltip title="Dar de Baja">
+                        <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(sample)} />
+                      </Tooltip>,
+                    ]}
+                  >
+                    <Text strong>{sampleTypeNames[sample.tipoMuestra] || 'Análisis'}</Text><br />
+                    <Text type="secondary">{sample.nombrePaciente}</Text>
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
           
-          {/* --- PAGINACIÓN AÑADIDA --- */}
           {filteredSamples.length > pageSize && (
             <div style={{ textAlign: 'center', marginTop: '32px' }}>
               <Pagination
@@ -208,12 +267,39 @@ const SamplesPage = () => {
         </>
       )}
 
-      {/* ... Modales (sin cambios) ... */}
       <Modal title="Tomar Nueva Muestra" visible={isTakeSampleModalVisible} onCancel={() => setTakeSampleModalVisible(false)} onOk={handleTakeSample} okText="Guardar Muestra">
         <TakeSampleForm form={takeSampleForm} pendingOrders={pendingOrders} />
       </Modal>
-      <Modal title={`Registrar Resultados de Muestra M${selectedSample?._id.slice(-6).toUpperCase()}`} visible={isRegisterResultsModalVisible} onCancel={() => setRegisterResultsModalVisible(false)} onOk={handleRegisterResults} okText="Guardar Resultados" width={700}>
+      
+      <Modal
+        title={selectedSample?.statusShowClient ? 'Editar Resultados' : 'Registrar Resultados'}
+        visible={isRegisterResultsModalVisible}
+        onCancel={() => setRegisterResultsModalVisible(false)}
+        onOk={handleRegisterOrUpdateResults}
+        okText="Guardar"
+        width={700}
+      >
         <RegisterResultsForm form={registerResultsForm} sampleType={selectedSample?.tipoMuestra} />
+      </Modal>
+
+      <Modal
+        title="Editar Información de la Muestra"
+        visible={isEditSampleModalVisible}
+        onCancel={() => setIsEditSampleModalVisible(false)}
+        onOk={handleEditSample}
+        okText="Guardar Cambios"
+      >
+        <EditSampleForm form={editSampleForm} pendingOrders={pendingOrders} />
+      </Modal>
+
+      <Modal
+          title={`Resultados de Muestra M${selectedSample?._id.slice(-6).toUpperCase()}`}
+          visible={isDetailsModalVisible}
+          onCancel={() => setIsDetailsModalVisible(false)}
+          footer={null}
+          width={800}
+      >
+          <SampleResultDetail sample={selectedSample} />
       </Modal>
     </div>
   );
