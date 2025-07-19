@@ -34,8 +34,11 @@ export const deleteAnalisis = (id) => api.delete(`/analisis/${id}`);
 export const getPedidos = () => api.get('/pedidos');
 export const addPedido = (orderData) => api.post('/pedidos', orderData);
 export const deletePedido = (orderId) => api.delete(`/pedidos/${orderId}`);
+export const updatePedido = (orderId, orderData) => api.put(`/pedidos/${orderId}`, orderData);
 // --- Servicios de Muestras ---
 export const getMuestras = () => api.get('/muestras');
+export const takeSample = (sampleData) => api.post('/muestras', sampleData);
+export const registerSampleResults = (sampleId, resultsData) => api.post(`/muestras/resultados/${sampleId}`, resultsData);
 // --- Nueva función para resetear el LDR ---
 export const resetLdrDevice = (deviceId) => api.delete(`/ldr/${deviceId}`);
 
