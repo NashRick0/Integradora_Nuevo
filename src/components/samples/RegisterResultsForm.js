@@ -28,15 +28,26 @@ const RegisterResultsForm = ({ form, sampleType }) => {
       <Form form={form} layout="vertical">
         <Title level={5}>Fórmula Roja</Title>
         <Row gutter={16}>
+          {/* --- CAMPOS ACTUALIZADOS --- */}
           <Col span={12}><Form.Item name={["biometriaHematica", "formulaRoja", "hemoglobina"]} label="Hemoglobina" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
           <Col span={12}><Form.Item name={["biometriaHematica", "formulaRoja", "hematocrito"]} label="Hematocrito" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
           <Col span={12}><Form.Item name={["biometriaHematica", "formulaRoja", "eritrocitos"]} label="Eritrocitos" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaRoja", "conMediaHb"]} label="Con. Media Hb" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaRoja", "volGlobularMedia"]} label="Vol. Globular Media" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaRoja", "HBCorpuscularMedia"]} label="HB. Corpuscular Media" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
           <Col span={12}><Form.Item name={["biometriaHematica", "formulaRoja", "plaqutas"]} label="Plaquetas" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
         </Row>
-        <Title level={5}>Fórmula Blanca</Title>
+        <Title level={5} style={{ marginTop: 16 }}>Fórmula Blanca</Title>
         <Row gutter={16}>
           <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "cuentaLeucocitaria"]} label="Leucocitos" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
           <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "linfocitos"]} label="Linfocitos" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "monocitos"]} label="Monocitos" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "segmentados"]} label="Segmentados" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "enBanda"]} label="En Banda" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "neutrofilosT"]} label="Neutrófilos T." rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "eosinofilos"]} label="Eosinófilos" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          <Col span={12}><Form.Item name={["biometriaHematica", "formulaBlanca", "basofilos"]} label="Basófilos" rules={[{ required: true }]}><InputNumber style={{width: '100%'}} /></Form.Item></Col>
+          {/* --- FIN DE CAMPOS ACTUALIZADOS --- */}
         </Row>
       </Form>
     );
