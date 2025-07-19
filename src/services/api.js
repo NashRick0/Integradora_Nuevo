@@ -43,6 +43,7 @@ export const registerSampleResults = (sampleId, resultsData) => api.post(`/muest
 export const updateSample = (sampleId, sampleData) => api.put(`/muestras/${sampleId}`, sampleData);
 export const updateSampleResults = (sampleId, resultsData) => api.put(`/muestras/resultados/${sampleId}`, resultsData);
 export const deleteSample = (sampleId) => api.delete(`/muestras/${sampleId}`);
+export const getMyResults = (userId) => api.get(`/muestras/usuario/${userId}`);
 // --- Nueva función LDR ---
 export const resetLdrDevice = (deviceId) => api.delete(`/ldr/${deviceId}`);
 

@@ -1,17 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Layout, Menu, Typography, Divider } from 'antd';
 import {
-  DashboardOutlined,
-  TeamOutlined,
-  ExperimentOutlined,
-  FileTextOutlined,
-  BarChartOutlined,
-  LogoutOutlined,
-  UserOutlined, // Importa el ícono para Mi Cuenta
+  DashboardOutlined, TeamOutlined, ExperimentOutlined, FileTextOutlined,
+  BarChartOutlined, LogoutOutlined, UserOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 
+const MySwal = withReactContent(Swal);
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;
 
@@ -20,24 +18,48 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Menú principal de navegación
-  const mainMenuItems = [
-    { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: '/dashboard/pacientes', icon: <TeamOutlined />, label: 'Pacientes' },
-    { key: '/dashboard/pedidos', icon: <FileTextOutlined />, label: 'Pedidos' },
-    { key: '/dashboard/muestras', icon: <ExperimentOutlined />, label: 'Muestras' },
-    { key: '/dashboard/analisis', icon: <BarChartOutlined />, label: 'Análisis' },
-  ];
+  const visibleMenuItems = useMemo(() => {
+    const allItems = [
+      { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard', roles: ['admin', 'accounting', 'laboratory'] },
+      { key: '/dashboard/pacientes', icon: <TeamOutlined />, label: 'Pacientes', roles: ['admin', 'laboratory'] },
+      { key: '/dashboard/pedidos', icon: <FileTextOutlined />, label: 'Pedidos', roles: ['admin', 'accounting'] },
+      { key: '/dashboard/muestras', icon: <ExperimentOutlined />, label: 'Muestras', roles: ['admin', 'laboratory'] },
+      { key: '/dashboard/analisis', icon: <BarChartOutlined />, label: 'Análisis', roles: ['admin', 'accounting', 'laboratory'] },
+    ];
+    
+    if (!user?.rol) {
+        return [];
+    }
 
-  // Menú inferior para cuenta y salir
+    return allItems.filter(item => item.roles.includes(user.rol));
+  }, [user?.rol]);
+
   const accountMenuItems = [
     { key: '/dashboard/mi-cuenta', icon: <UserOutlined />, label: 'Mi Cuenta' },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Salir', danger: true },
   ];
 
+  // --- FUNCIÓN DEDICADA PARA CERRAR SESIÓN ---
+  const handleLogout = () => {
+    MySwal.fire({
+      title: '¿Estás seguro?',
+      text: "¿Quieres cerrar la sesión?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, ¡cerrar sesión!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout();
+      }
+    });
+  };
+
   const handleMenuClick = (e) => {
     if (e.key === 'logout') {
-      logout();
+      handleLogout(); // Llama a la función dedicada
     } else {
       navigate(e.key);
     }
@@ -45,35 +67,20 @@ const DashboardPage = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider 
-        breakpoint="lg" 
-        collapsedWidth="0"
-        // --- INICIO DE CAMBIOS DE ESTILO ---
-        style={{ display: 'flex', flexDirection: 'column' }} 
-      >
+      <Sider breakpoint="lg" collapsedWidth="0" style={{ display: 'flex', flexDirection: 'column' }}>
         <div>
           <div style={{ height: '32px', margin: '16px', color: 'white', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
             IIC UJED
           </div>
           <Menu 
-            theme="dark" 
-            mode="inline" 
-            selectedKeys={[location.pathname]} 
-            onClick={handleMenuClick}
-            items={mainMenuItems}
+            theme="dark" mode="inline" selectedKeys={[location.pathname]} 
+            onClick={handleMenuClick} items={visibleMenuItems}
           />
         </div>
-        <div style={{ marginTop: 'auto' }}> {/* Empuja este bloque hacia abajo */}
+        <div style={{ marginTop: 'auto' }}>
           <Divider style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)'}} />
-          <Menu
-            theme="dark"
-            mode="inline"
-            onClick={handleMenuClick}
-            items={accountMenuItems}
-            selectedKeys={[location.pathname]} 
-          />
+          <Menu theme="dark" mode="inline" onClick={handleMenuClick} items={accountMenuItems} selectedKeys={[location.pathname]} />
         </div>
-        {/* --- FIN DE CAMBIOS DE ESTILO --- */}
       </Sider>
       <Layout>
         <Header style={{ padding: '0 24px', background: '#fff', display: 'flex', alignItems: 'center' }}>

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd'; // Para mostrar notificaciones
+import { message } from 'antd';
 import { loginUser } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -15,14 +15,19 @@ export const AuthProvider = ({ children }) => {
       const { data } = await loginUser(credentials);
       if (data.login === 'successful') {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.usuario.rol);
         localStorage.setItem('user', JSON.stringify(data.usuario));
         
         setToken(data.token);
         setUser(data.usuario);
         
         message.success(`Bienvenido, ${data.usuario.nombre}`);
-        navigate('/dashboard');
+        
+        // Redirige según el rol del usuario
+        if (data.usuario.rol === 'patient') {
+          navigate('/portal');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       console.error('Error en el inicio de sesión:', error);
@@ -32,7 +37,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('role');
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
