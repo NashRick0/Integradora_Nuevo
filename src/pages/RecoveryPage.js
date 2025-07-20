@@ -1,26 +1,72 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, Form, Input, Button, Row, Col, Typography, message } from 'antd';
+import { Link, useNavigate } from 'react-router-dom';
+import { Card, Form, Input, Button, Typography } from 'antd';
 import { MailOutlined, ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { requestPasswordReset } from '../services/api';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 
 import logoIIC from '../assets/logo-iic.png';
 import logoUJED from '../assets/logo-ujed.png';
 import labImage from '../assets/lab_login.jpg';
 
+const MySwal = withReactContent(Swal);
 const { Title, Text } = Typography;
 
 const RecoveryPage = () => {
+  const [form] = Form.useForm();
+  const [emailStatus, setEmailStatus] = useState('');
+  const [isValidEmail, setIsValidEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Función para validar el formato del correo
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  // Manejar cambio en el campo de correo
+  const handleEmailChange = (e) => {
+    const email = e.target.value;
+    
+    if (!email) {
+      setEmailStatus('');
+      setIsValidEmail(false);
+      return;
+    }
+    
+    if (validateEmail(email)) {
+      setEmailStatus('success');
+      setIsValidEmail(true);
+    } else {
+      setEmailStatus('error');
+      setIsValidEmail(false);
+    }
+  };
 
   const onFinish = async (values) => {
     setIsLoading(true);
     try {
-      // Simulando llamada a la API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      message.success(`Se ha enviado un correo de recuperación a: ${values.correo}`);
+      await requestPasswordReset({ correo: values.correo });
+      
+      await MySwal.fire({
+        title: '¡Correo Enviado!',
+        text: 'Correo para recuperar tu contraseña.',
+        icon: 'success',
+        confirmButtonColor: '#d9363e',
+      });
+      
+      navigate('/login');
     } catch (error) {
-      message.error('Ocurrió un error al enviar el correo. Por favor, inténtalo de nuevo.');
+      const errorMessage = error.response?.data?.message || 'Ocurrió un problema. Intenta de nuevo.';
+      MySwal.fire({
+        title: 'Error',
+        text: errorMessage,
+        icon: 'error',
+        confirmButtonColor: '#d9363e',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -28,34 +74,34 @@ const RecoveryPage = () => {
 
   return (
     <div style={styles.pageContainer}>
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        style={styles.header}
-      >
+      <div style={styles.header}>
         <img src={logoIIC} alt="Logo IIC" style={styles.logoIIC} />
         <img src={logoUJED} alt="Logo UJED" style={styles.logoUJED} />
-      </motion.div>
-      
+      </div>
+
       <Card style={styles.card}>
-        <Row>
-          <Col xs={0} md={12} style={styles.imageContainer}>
+        <div style={styles.cardContent}>
+          <div style={styles.imageContainer}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
+              style={{ width: '100%', height: '100%', position: 'relative' }}
             >
               <div style={styles.overlay} />
-              <img src={labImage} alt="Laboratorio" style={styles.labImage} />
+              <img 
+                src={labImage} 
+                alt="Laboratorio" 
+                style={styles.labImage} 
+              />
               <div style={styles.imageText}>
                 <Title level={3} style={{ color: '#fff', marginBottom: 8 }}>Recupera tu acceso</Title>
                 <Text style={{ color: 'rgba(255,255,255,0.8)' }}>Te ayudaremos a recuperar el acceso a tu cuenta</Text>
               </div>
             </motion.div>
-          </Col>
+          </div>
           
-          <Col xs={24} md={12} style={styles.formContainer}>
+          <div style={styles.formContainer}>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -63,10 +109,13 @@ const RecoveryPage = () => {
             >
               <div style={styles.formHeader}>
                 <Title level={2} style={styles.title}>¿Olvidaste tu contraseña?</Title>
-                <Text type="secondary" style={styles.subtitle}>Ingresa tu correo electrónico para restablecer tu contraseña.</Text>
+                <Text type="secondary" style={styles.subtitle}>
+                  Ingresa tu correo electrónico para restablecer tu contraseña.
+                </Text>
               </div>
               
               <Form 
+                form={form}
                 name="recovery" 
                 onFinish={onFinish} 
                 layout="vertical" 
@@ -76,17 +125,16 @@ const RecoveryPage = () => {
                 <Form.Item 
                   name="correo" 
                   label="Correo Electrónico" 
-                  rules={[{ 
-                    required: true, 
-                    message: 'Por favor, ingresa tu correo.', 
-                    type: 'email' 
-                  }]}
+                  validateStatus={emailStatus}
+                  help={emailStatus === 'error' ? 'Por favor, ingresa un correo electrónico válido' : ''}
                 >
                   <Input 
                     prefix={<MailOutlined style={styles.inputIcon} />} 
                     placeholder="tu@correo.com" 
                     size="large" 
+                    className={emailStatus ? `ant-form-item-has-${emailStatus}` : ''}
                     style={styles.input}
+                    onChange={handleEmailChange}
                   />
                 </Form.Item>
                 
@@ -94,9 +142,9 @@ const RecoveryPage = () => {
                   <Button 
                     type="primary" 
                     htmlType="submit" 
-                    block 
-                    size="large" 
+                    size="large"
                     loading={isLoading}
+                    disabled={!isValidEmail || isLoading}
                     style={styles.recoveryButton}
                     icon={<ArrowRightOutlined />}
                   >
@@ -104,31 +152,29 @@ const RecoveryPage = () => {
                   </Button>
                 </Form.Item>
                 
-                <div style={styles.footer}>
-                  <Link to="/login" style={styles.link}>
-                    <ArrowLeftOutlined style={{ marginRight: 8 }} />
-                    Volver a Iniciar Sesión
+                <div style={{ textAlign: 'center' }}>
+                  <Link to="/login" style={{ color: '#d9363e' }}>
+                    <ArrowLeftOutlined /> Volver al inicio de sesión
                   </Link>
                 </div>
               </Form>
             </motion.div>
-          </Col>
-        </Row>
+          </div>
+        </div>
       </Card>
     </div>
   );
 };
 
-// Estilos consistentes con LoginPage
 const styles = {
   pageContainer: {
+    minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)',
     padding: '20px',
+    background: '#f5f5f5',
   },
   header: {
     width: '100%',
@@ -155,14 +201,22 @@ const styles = {
     overflow: 'hidden',
     border: 'none',
   },
+  cardContent: {
+    display: 'flex',
+    height: '600px',
+    '@media (max-width: 768px)': {
+      flexDirection: 'column',
+      height: 'auto',
+    },
+  },
   imageContainer: {
     position: 'relative',
+    width: '50%',
     height: '100%',
-    minHeight: '600px',
     overflow: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    '@media (max-width: 768px)': {
+      display: 'none',
+    },
   },
   overlay: {
     position: 'absolute',
@@ -190,17 +244,23 @@ const styles = {
     color: '#fff',
   },
   formContainer: {
+    width: '50%',
     padding: '60px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
+    '@media (max-width: 768px)': {
+      width: '100%',
+      padding: '30px 20px',
+    },
   },
   formHeader: {
-    marginBottom: '40px',
+    marginBottom: '32px',
+    textAlign: 'center',
   },
   title: {
-    color: '#d9363e',
-    marginBottom: '12px',
+    color: '#333',
+    marginBottom: '8px',
     fontWeight: 600,
   },
   subtitle: {
@@ -214,39 +274,35 @@ const styles = {
     width: '100%',
   },
   input: {
-    padding: '12px 16px',
-    borderRadius: '8px',
-    fontSize: '15px',
+    padding: '10px 12px',
+    borderRadius: '6px',
+    transition: 'all 0.3s',
+    '&:hover': {
+      borderColor: '#40a9ff',
+    },
+    '&:focus': {
+      borderColor: '#40a9ff',
+      boxShadow: '0 0 0 2px rgba(24, 144, 255, 0.2)',
+    },
   },
   inputIcon: {
     color: '#9e9e9e',
     marginRight: '8px',
   },
   recoveryButton: {
-    background: '#d9363e',
-    height: '48px',
-    fontSize: '16px',
+    width: '100%',
+    height: '42px',
     fontWeight: 500,
-    borderRadius: '8px',
-    marginTop: '16px',
-    transition: 'all 0.3s ease',
+    backgroundColor: '#d9363e',
     border: 'none',
-    ':hover': {
-      background: '#c41a23',
+    borderRadius: '6px',
+    '&:hover': {
+      backgroundColor: '#c41a23',
     },
-  },
-  footer: {
-    textAlign: 'center',
-    marginTop: '24px',
-  },
-  link: {
-    color: '#d9363e',
-    fontWeight: 500,
-    display: 'inline-flex',
-    alignItems: 'center',
-    transition: 'color 0.3s ease',
-    ':hover': {
-      color: '#ff4d4f',
+    '&:disabled': {
+      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+      color: 'rgba(0, 0, 0, 0.25)',
+      borderColor: '#d9d9d9',
     },
   },
 };

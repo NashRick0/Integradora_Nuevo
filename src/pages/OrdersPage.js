@@ -201,16 +201,33 @@ const OrdersPage = () => {
       )}
 
       {/* Modal para Agregar Pedido */}
-      <Modal title="Registrar Nuevo Pedido" visible={isAddModalVisible} onCancel={() => setIsAddModalVisible(false)} onOk={handleAddOk} okText="Guardar Pedido" cancelText="Cancelar" width={700}>
+      <Modal 
+        title="Registrar Nuevo Pedido" 
+        visible={isAddModalVisible} 
+        onCancel={() => setIsAddModalVisible(false)} 
+        onOk={handleAddOk} 
+        okText="Guardar Pedido" 
+        cancelText="Cancelar"
+        width={700}
+        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
+      >
         <OrderForm form={addForm} patients={patients} analyses={analyses} />
       </Modal>
 
-      {/* Modal para Ver Detalles (Restaurado) */}
+      {/* Modal para Ver Detalles */}
       <Modal
         title={`Detalles del Pedido: ${selectedOrder?._id.slice(-6).toUpperCase()}`}
         visible={isDetailsModalVisible}
         onCancel={() => setIsDetailsModalVisible(false)}
-        footer={[<Button key="close" onClick={() => setIsDetailsModalVisible(false)}>Cerrar</Button>]}
+        footer={[
+          <Button 
+            key="close"
+            onClick={() => setIsDetailsModalVisible(false)}
+            style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
+          >
+            Cerrar
+          </Button>
+        ]}
         width={600}
       >
         {selectedOrder && (
@@ -239,6 +256,7 @@ const OrdersPage = () => {
         onOk={handleEditOk}
         okText="Guardar Cambios"
         cancelText="Cancelar"
+        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
       >
         <EditOrderForm form={editForm} />
       </Modal>

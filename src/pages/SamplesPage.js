@@ -267,17 +267,27 @@ const SamplesPage = () => {
         </>
       )}
 
-      <Modal title="Tomar Nueva Muestra" visible={isTakeSampleModalVisible} onCancel={() => setTakeSampleModalVisible(false)} onOk={handleTakeSample} okText="Guardar Muestra">
+      <Modal 
+        title="Tomar Nueva Muestra" 
+        visible={isTakeSampleModalVisible} 
+        onCancel={() => setTakeSampleModalVisible(false)} 
+        onOk={handleTakeSample} 
+        okText="Guardar Muestra"
+        cancelText="Cancelar"
+        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
+      >
         <TakeSampleForm form={takeSampleForm} pendingOrders={pendingOrders} />
       </Modal>
-      
+
       <Modal
         title={selectedSample?.statusShowClient ? 'Editar Resultados' : 'Registrar Resultados'}
         visible={isRegisterResultsModalVisible}
         onCancel={() => setRegisterResultsModalVisible(false)}
         onOk={handleRegisterOrUpdateResults}
         okText="Guardar"
+        cancelText="Cancelar"
         width={700}
+        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
       >
         <RegisterResultsForm form={registerResultsForm} sampleType={selectedSample?.tipoMuestra} />
       </Modal>
@@ -288,6 +298,8 @@ const SamplesPage = () => {
         onCancel={() => setIsEditSampleModalVisible(false)}
         onOk={handleEditSample}
         okText="Guardar Cambios"
+        cancelText="Cancelar"
+        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
       >
         <EditSampleForm form={editSampleForm} pendingOrders={pendingOrders} />
       </Modal>
@@ -296,7 +308,15 @@ const SamplesPage = () => {
           title={`Resultados de Muestra M${selectedSample?._id.slice(-6).toUpperCase()}`}
           visible={isDetailsModalVisible}
           onCancel={() => setIsDetailsModalVisible(false)}
-          footer={null}
+          footer={[
+            <Button 
+              key="close"
+              onClick={() => setIsDetailsModalVisible(false)}
+              style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
+            >
+              Cerrar
+            </Button>
+          ]}
           width={800}
       >
           <SampleResultDetail sample={selectedSample} />

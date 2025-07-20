@@ -194,7 +194,15 @@ const AnalysisPage = () => {
           </Card>
         </Col>
       </Row>
-      <Modal title={editingAnalisis ? "Editar Análisis" : "Agregar Nuevo Análisis"} visible={isModalVisible} onCancel={handleCancel} onOk={handleOk} okText="Guardar" cancelText="Cancelar">
+      <Modal 
+        title={editingAnalisis ? "Editar Análisis" : "Agregar Nuevo Análisis"} 
+        visible={isModalVisible} 
+        onCancel={handleCancel} 
+        onOk={handleOk} 
+        okText="Guardar" 
+        cancelText="Cancelar"
+        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
+      >
         <AnalysisForm form={form} />
       </Modal>
     </div>

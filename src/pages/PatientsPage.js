@@ -222,11 +222,32 @@ const PatientsPage = () => {
         </>
       )}
 
-      <Modal title="Agregar Nuevo Paciente" visible={isAddModalVisible} onCancel={() => { setIsAddModalVisible(false); form.resetFields(); }} onOk={handleAddUser} okText="Guardar" cancelText="Cancelar">
+      <Modal 
+        title="Agregar Nuevo Paciente" 
+        visible={isAddModalVisible} 
+        onCancel={() => { setIsAddModalVisible(false); form.resetFields(); }} 
+        onOk={handleAddUser} 
+        okText="Guardar" 
+        cancelText="Cancelar"
+        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
+      >
         <AddPatientForm form={form} />
       </Modal>
 
-      <Modal title="Detalles del Paciente" visible={isDetailsModalVisible} onCancel={() => setIsDetailsModalVisible(false)} footer={[<Button key="back" onClick={() => setIsDetailsModalVisible(false)}>Cerrar</Button>]}>
+      <Modal 
+        title="Detalles del Paciente" 
+        visible={isDetailsModalVisible} 
+        onCancel={() => setIsDetailsModalVisible(false)} 
+        footer={[
+          <Button 
+            key="back" 
+            onClick={() => setIsDetailsModalVisible(false)}
+            style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
+          >
+            Cerrar
+          </Button>
+        ]}
+      >
         {selectedUser && (
           <Descriptions bordered column={1}>
             <Descriptions.Item label="Nombre Completo">{`${selectedUser.nombre} ${selectedUser.apellidoPaterno} ${selectedUser.apellidoMaterno}`}</Descriptions.Item>
