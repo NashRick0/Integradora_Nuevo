@@ -4,11 +4,14 @@ import { Card, Form, Input, Button, Row, Col, Typography, message } from 'antd';
 import { MailOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 
 import logoIIC from '../assets/logo-iic.png';
 import logoUJED from '../assets/logo-ujed.png';
 import labImage from '../assets/lab_login.jpg';
 
+const MySwal = withReactContent(Swal);
 const { Title, Text } = Typography;
 
 const LoginPage = () => {
@@ -19,14 +22,16 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       await login({ correo: values.correo, contraseña: values.contraseña });
-      message.success('¡Bienvenido de nuevo!');
     } catch (error) {
-      message.error('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+      MySwal.fire({
+        title: 'Error de Autenticación',
+        text: 'El usuario y/o la contraseña son incorrectos.',
+        icon: 'error',
+      });
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div style={styles.pageContainer}>
       <motion.div

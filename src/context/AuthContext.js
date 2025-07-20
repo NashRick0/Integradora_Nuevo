@@ -22,16 +22,17 @@ export const AuthProvider = ({ children }) => {
         
         message.success(`Bienvenido, ${data.usuario.nombre}`);
         
-        // Redirige según el rol del usuario
         if (data.usuario.rol === 'patient') {
           navigate('/portal');
         } else {
           navigate('/dashboard');
         }
+      } else {
+        throw new Error('Credenciales no válidas desde la API');
       }
     } catch (error) {
       console.error('Error en el inicio de sesión:', error);
-      message.error('Credenciales incorrectas. Por favor, intenta de nuevo.');
+      throw error;
     }
   };
 
