@@ -100,7 +100,7 @@ const RecoveryPage = () => {
                     style={styles.recoveryButton}
                     icon={<ArrowRightOutlined />}
                   >
-                    Enviar enlace de recuperación
+                    Enviar correo de recuperación
                   </Button>
                 </Form.Item>
                 

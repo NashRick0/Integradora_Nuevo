@@ -66,28 +66,107 @@ const DashboardPage = () => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider breakpoint="lg" collapsedWidth="0" style={{ display: 'flex', flexDirection: 'column' }}>
+    <Layout style={{ minHeight: '100vh', background: '#fff' }}>
+      <Sider 
+        breakpoint="lg" 
+        collapsedWidth="0" 
+        width={220}
+        style={{
+          background: '#fff',
+          boxShadow: '2px 0 8px rgba(0, 0, 0, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRight: '1px solid #f0f0f0'
+        }}
+      >
         <div>
-          <div style={{ height: '32px', margin: '16px', color: 'white', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
-            IIC UJED
+          <div style={{
+            height: '60px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 12px',
+            borderBottom: '1px solid #f5f5f5'
+          }}>
+            <img 
+              src="/logo-ujed.png" 
+              alt="Logo UJED" 
+              style={{ 
+                height: '32px',
+                marginRight: '8px' 
+              }} 
+            />
+            <span style={{ 
+              color: '#d9363e', 
+              fontWeight: 600,
+              fontSize: '1rem'
+            }}>
+              Laboratorio
+            </span>
           </div>
           <Menu 
-            theme="dark" mode="inline" selectedKeys={[location.pathname]} 
-            onClick={handleMenuClick} items={visibleMenuItems}
+            theme="light" 
+            mode="inline" 
+            selectedKeys={[location.pathname]} 
+            onClick={handleMenuClick} 
+            items={visibleMenuItems}
+            style={{ 
+              borderRight: 0,
+              padding: '4px 8px',
+              fontSize: '0.9rem'
+            }}
           />
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <Divider style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)'}} />
-          <Menu theme="dark" mode="inline" onClick={handleMenuClick} items={accountMenuItems} selectedKeys={[location.pathname]} />
+          <Divider style={{ 
+            margin: '4px 0',
+            borderTopColor: '#f5f5f5'
+          }} />
+          <Menu 
+            theme="light" 
+            mode="inline" 
+            onClick={handleMenuClick} 
+            items={accountMenuItems} 
+            selectedKeys={[location.pathname]}
+            style={{ 
+              borderRight: 0,
+              padding: '4px 8px',
+              fontSize: '0.9rem'
+            }}
+          />
         </div>
       </Sider>
       <Layout>
-        <Header style={{ padding: '0 24px', background: '#fff', display: 'flex', alignItems: 'center' }}>
-          <Title level={4} style={{ margin: 0 }}>Hola, {user?.nombre || 'Usuario'}</Title>
+        <Header style={{ 
+          padding: '0 20px',
+          background: '#fff', 
+          display: 'flex', 
+          alignItems: 'center',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          zIndex: 1,
+          height: '60px'
+        }}>
+          <Title level={4} style={{ 
+            margin: 0, 
+            color: '#333',
+            fontWeight: 500,
+            fontSize: '1.1rem'
+          }}>
+            Hola, {user?.nombre || 'Usuario'}
+          </Title>
         </Header>
-        <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
-          <div style={{ padding: 24, background: '#fff', minHeight: 'calc(100vh - 112px)' }}>
+        <Content style={{ 
+          margin: '16px 12px 0',
+          overflow: 'initial',
+          background: '#fafafa',
+          minHeight: 'calc(100vh - 76px)'
+        }}>
+          <div style={{ 
+            padding: '20px',
+            background: '#fff', 
+            borderRadius: 6,
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+          }}>
             <Outlet />
           </div>
         </Content>
