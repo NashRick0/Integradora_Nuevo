@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Card, Form, Input, Button, Typography } from 'antd';
+import { Card, Form, Input, Button, Typography, Row, Col } from 'antd';
 import { MailOutlined, ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { requestPasswordReset } from '../services/api';
@@ -74,34 +74,34 @@ const RecoveryPage = () => {
 
   return (
     <div style={styles.pageContainer}>
-      <div style={styles.header}>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        style={styles.header}
+      >
         <img src={logoIIC} alt="Logo IIC" style={styles.logoIIC} />
         <img src={logoUJED} alt="Logo UJED" style={styles.logoUJED} />
-      </div>
-
+      </motion.div>
+      
       <Card style={styles.card}>
-        <div style={styles.cardContent}>
-          <div style={styles.imageContainer}>
+        <Row>
+          <Col xs={0} md={12} style={styles.imageContainer}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
-              style={{ width: '100%', height: '100%', position: 'relative' }}
             >
               <div style={styles.overlay} />
-              <img 
-                src={labImage} 
-                alt="Laboratorio" 
-                style={styles.labImage} 
-              />
+              <img src={labImage} alt="Laboratorio" style={styles.labImage} />
               <div style={styles.imageText}>
                 <Title level={3} style={{ color: '#fff', marginBottom: 8 }}>Recupera tu acceso</Title>
                 <Text style={{ color: 'rgba(255,255,255,0.8)' }}>Te ayudaremos a recuperar el acceso a tu cuenta</Text>
               </div>
             </motion.div>
-          </div>
+          </Col>
           
-          <div style={styles.formContainer}>
+          <Col xs={24} md={12} style={styles.formContainer}>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -142,7 +142,8 @@ const RecoveryPage = () => {
                   <Button 
                     type="primary" 
                     htmlType="submit" 
-                    size="large"
+                    block
+                    size="large" 
                     loading={isLoading}
                     disabled={!isValidEmail || isLoading}
                     style={styles.recoveryButton}
@@ -159,8 +160,8 @@ const RecoveryPage = () => {
                 </div>
               </Form>
             </motion.div>
-          </div>
-        </div>
+          </Col>
+        </Row>
       </Card>
     </div>
   );
@@ -168,13 +169,13 @@ const RecoveryPage = () => {
 
 const styles = {
   pageContainer: {
-    minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)',
     padding: '20px',
-    background: '#f5f5f5',
   },
   header: {
     width: '100%',
@@ -201,22 +202,14 @@ const styles = {
     overflow: 'hidden',
     border: 'none',
   },
-  cardContent: {
-    display: 'flex',
-    height: '600px',
-    '@media (max-width: 768px)': {
-      flexDirection: 'column',
-      height: 'auto',
-    },
-  },
   imageContainer: {
     position: 'relative',
-    width: '50%',
     height: '100%',
+    minHeight: '600px',
     overflow: 'hidden',
-    '@media (max-width: 768px)': {
-      display: 'none',
-    },
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   overlay: {
     position: 'absolute',
@@ -231,6 +224,7 @@ const styles = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+    objectPosition: 'center',
     position: 'absolute',
     top: 0,
     left: 0,
@@ -242,31 +236,26 @@ const styles = {
     right: '40px',
     zIndex: 2,
     color: '#fff',
+    textAlign: 'left',
   },
   formContainer: {
-    width: '50%',
-    padding: '60px',
+    padding: '48px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    '@media (max-width: 768px)': {
-      width: '100%',
-      padding: '30px 20px',
-    },
   },
   formHeader: {
     marginBottom: '32px',
     textAlign: 'center',
   },
   title: {
-    color: '#333',
+    color: '#1a1a1a',
     marginBottom: '8px',
     fontWeight: 600,
   },
   subtitle: {
     fontSize: '16px',
-    display: 'block',
-    marginBottom: '8px',
+    color: '#666',
   },
   form: {
     maxWidth: '400px',
@@ -274,36 +263,25 @@ const styles = {
     width: '100%',
   },
   input: {
-    padding: '10px 12px',
-    borderRadius: '6px',
-    transition: 'all 0.3s',
-    '&:hover': {
-      borderColor: '#40a9ff',
-    },
-    '&:focus': {
-      borderColor: '#40a9ff',
-      boxShadow: '0 0 0 2px rgba(24, 144, 255, 0.2)',
-    },
+    padding: '12px 16px',
+    fontSize: '16px',
   },
   inputIcon: {
-    color: '#9e9e9e',
+    color: '#bfbfbf',
     marginRight: '8px',
   },
   recoveryButton: {
-    width: '100%',
-    height: '42px',
-    fontWeight: 500,
-    backgroundColor: '#d9363e',
+    background: '#d9363e',
     border: 'none',
-    borderRadius: '6px',
-    '&:hover': {
-      backgroundColor: '#c41a23',
-    },
-    '&:disabled': {
-      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-      color: 'rgba(0, 0, 0, 0.25)',
-      borderColor: '#d9d9d9',
-    },
+    height: '48px',
+    fontSize: '16px',
+    fontWeight: 500,
+    borderRadius: '8px',
+    marginTop: '8px',
+  },
+  link: {
+    color: '#d9363e',
+    transition: 'all 0.3s',
   },
 };
 
