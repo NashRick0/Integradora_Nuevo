@@ -68,6 +68,7 @@ const PatientsPage = () => {
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
+      if (user.rol !== 'patient') return false; // Filtrar solo usuarios con rol "patient"
       if (filter !== 'all') {
         const statusMatch = filter === 'active' ? user.status === true : user.status === false;
         if (!statusMatch) return false;
