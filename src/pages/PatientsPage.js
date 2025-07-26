@@ -1,23 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Button,
-  Input,
-  Tabs,
-  Avatar,
-  Typography,
-  Tag,
-  Space,
-  Modal,
-  message,
-  Form,
-  Descriptions,
-  Row,
-  Col,
-  Card,
-  Empty,
-  Spin,
-  Pagination,
-  Tooltip,
+  Button,Input,Tabs,
+  Avatar,Typography,Tag,
+  Space,Modal,message,
+  Form,Descriptions,Row,
+  Col,Card,Empty,
+  Spin,Pagination,Tooltip
 } from 'antd';
 import {
   UserOutlined,
@@ -31,6 +19,7 @@ import AddPatientForm from '../components/patients/AddPatientForm';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import axios from 'axios';
 
 const MySwal = withReactContent(Swal);
 const { Title, Text } = Typography;
@@ -123,6 +112,17 @@ const PatientsPage = () => {
   };
   // --- FIN DE LA ACTUALIZACIÓN ---
 
+  axios.interceptors.response.use(
+    response => response,
+    error => {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login'; // o '/' si tu login está ahí
+      }
+      return Promise.reject(error);
+    }
+  );
+
   const showUserDetails = (user) => {
     setSelectedUser(user);
     setIsDetailsModalVisible(true);
@@ -184,16 +184,20 @@ const PatientsPage = () => {
                       <Tooltip title="Dar de Baja">
                         <Button type="text" danger key="delete" icon={<DeleteOutlined />} onClick={() => showDeleteConfirm(user)} />
                       </Tooltip>,
+                      
+                      
+                      
                     ]}
                   >
                     <Card.Meta
-                      avatar={<Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />}
-                      title={`${user.nombre} ${user.apellidoPaterno}`}
+                      avatar={<Avatar style={{ backgroundColor: '#89c2f0',padding:'1vw' }} icon={<UserOutlined />} />}
+                      //title={`${user.nombre} ${user.apellidoPaterno}`}
+                      title={<p style={{fontSize: '1.4vw'}}>{user.nombre} {user.apellidoPaterno} {user.apellidoMaterno}</p>}
                       description={
                         <>
-                          <Text type="secondary">{user.correo}</Text>
+                          <Text type="secondary" style={{fontSize:20}}>{user.correo}</Text>
                           <br />
-                          <Tag color={user.status ? 'green' : 'volcano'} style={{ marginTop: 8 }}>
+                          <Tag color={user.status ? 'green' : 'volcano'} style={{margin:'1vh', padding:'.3vw'}}>
                             {user.status ? 'ACTIVO' : 'INACTIVO'}
                           </Tag>
                         </>
@@ -222,8 +226,7 @@ const PatientsPage = () => {
         </>
       )}
 
-      <Modal 
-        title="Agregar Nuevo Paciente" 
+      <Modal title="Agregar Nuevo Paciente" 
         visible={isAddModalVisible} 
         onCancel={() => { setIsAddModalVisible(false); form.resetFields(); }} 
         onOk={handleAddUser} 
@@ -233,9 +236,8 @@ const PatientsPage = () => {
       >
         <AddPatientForm form={form} />
       </Modal>
-
-      <Modal 
-        title="Detalles del Paciente" 
+      
+      <Modal title="Detalles del Paciente" 
         visible={isDetailsModalVisible} 
         onCancel={() => setIsDetailsModalVisible(false)} 
         footer={[
@@ -246,6 +248,7 @@ const PatientsPage = () => {
           >
             Cerrar
           </Button>
+          
         ]}
       >
         {selectedUser && (
@@ -258,6 +261,7 @@ const PatientsPage = () => {
           </Descriptions>
         )}
       </Modal>
+
     </div>
   );
 };

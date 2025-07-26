@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, /*Navigate*/ } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/common/PrivateRoute';
 import { AdminRoute, PatientRoute } from './components/common/RoleBasedRoutes';
@@ -15,6 +15,7 @@ import OrdersPage from './pages/OrdersPage';
 import SamplesPage from './pages/SamplesPage';
 import AccountPage from './pages/AccountPage';
 import PatientPortalPage from './pages/PatientPortalPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
@@ -47,7 +48,7 @@ function App() {
           />
           
           {/* Redirección por defecto */}
-          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AuthProvider>
     </Router>
