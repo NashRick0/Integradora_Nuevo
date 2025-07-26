@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { message } from 'antd';
-import { loginUser } from '../services/api';
+import { loginUser, logoutUser  } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -36,12 +36,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    navigate('/login');
+  const logout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error('Error al cerrar sesión en el servidor:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+      navigate('/login');
+    }
   };
 
   return (

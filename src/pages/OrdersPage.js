@@ -8,7 +8,6 @@ import {
   Tabs,
   Typography,
   Space,
-  Empty,
   Spin,
   Pagination,
   Tooltip,
@@ -19,7 +18,6 @@ import {
 } from 'antd';
 import {
   PlusOutlined,
-  SearchOutlined,
   EditOutlined,
   DeleteOutlined,
   FileTextOutlined,
@@ -162,7 +160,7 @@ const OrdersPage = () => {
 
   return (
     <div>
-      <Row justify="space-between" align="middle" gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+      <Row className='scale-up-tl' justify="space-between" align="middle" gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} md="auto"><Title level={3} style={{ margin: 0 }}>Gestión de Pedidos</Title></Col>
         <Col xs={24} md="auto">
           <Space wrap style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -170,26 +168,26 @@ const OrdersPage = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddModalVisible(true)} style={{ background: '#d9363e' }}>Agregar</Button>
           </Space>
         </Col>
-      </Row>
+      </Row >
       <Tabs defaultActiveKey="pendiente" onChange={(key) => { setFilter(key); setCurrentPage(1); }}>
         <TabPane tab="En Proceso" key="pendiente" /><TabPane tab="Completadas" key="pagado" /><TabPane tab="Canceladas" key="cancelado" /><TabPane tab="Todos" key="todos" />
       </Tabs>
 
       {loading ? <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div> : (
         <>
-          <Row gutter={[16, 24]}>
+          <Row gutter={[16, 24]} className='scale-up-ver-center'>
             {paginatedOrders.map(order => (
-              <Col xs={24} sm={12} md={8} key={order._id}>
+              <Col xs={24} sm={20} md={8} key={order._id}>
                 <Card
-                  title={<Space><ExperimentOutlined />{order._id.slice(-6).toUpperCase()}</Space>}
+                  title={<Space><ExperimentOutlined /><p style={{fontSize:'2vh', marginTop:'1.5vh'}}>{order._id.slice(-6).toUpperCase()}</p></Space>}
                   actions={[
-                    <Tooltip title="Editar Pedido"><Button type="text" icon={<EditOutlined />} key="edit" onClick={() => showEditModal(order)} /></Tooltip>,
-                    <Tooltip title="Ver Detalles"><Button type="text" icon={<FileTextOutlined />} key="details" onClick={() => showOrderDetails(order)} /></Tooltip>,
-                    <Tooltip title="Dar de Baja"><Button type="text" danger icon={<DeleteOutlined />} key="delete" onClick={() => handleDelete(order)}/></Tooltip>,
+                    <Tooltip title="Editar Pedido"><Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" icon={<EditOutlined />} key="edit" onClick={() => showEditModal(order)} /></Tooltip>,
+                    <Tooltip title="Ver Detalles"><Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" icon={<FileTextOutlined />} key="details" onClick={() => showOrderDetails(order)} /></Tooltip>,
+                    <Tooltip title="Dar de Baja"><Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" danger icon={<DeleteOutlined />} key="delete" onClick={() => handleDelete(order)}/></Tooltip>,
                   ]}
                 >
-                  <Text strong>{order.analisis[0]?.nombre || 'Análisis'}</Text><br/>
-                  <Text type="secondary">{`${order.usuarioId?.nombre || ''} ${order.usuarioId?.apellidoPaterno || ''}`}</Text>
+                  <Text style={{fontSize:'2vh'}} strong>{order.analisis[0]?.nombre || 'Análisis'}</Text><br/>
+                  <Text type="secondary">{<p style={{fontSize:'2vh'}}>{order.usuarioId?.nombre || ''} {order.usuarioId?.apellidoPaterno || ''}</p>}</Text>
                 </Card>
               </Col>
             ))}

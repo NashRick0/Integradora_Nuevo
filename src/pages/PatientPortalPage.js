@@ -92,15 +92,15 @@ const PatientPortalPage = () => {
         </Card>
         
         <Title level={4}>Mis Resultados</Title>
-        <Card>
+        <Card >
           {loading ? (
             <div style={{ textAlign: 'center', padding: '50px' }}><Spin /></div>
           ) : (
             <List
-              itemLayout="horizontal"
-              dataSource={results}
-              renderItem={(item) => (
-                <List.Item
+            itemLayout="horizontal"
+            dataSource={results}
+            renderItem={(item) => (
+              <List.Item
                   actions={[
                     // --- Botón "Ver" Restaurado ---
                     <Tooltip title="Ver Detalles">

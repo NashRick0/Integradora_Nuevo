@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Row, Col, Card, Button, Input, Tabs, Typography, Space, Empty, Spin, Tooltip, Modal, Form, Pagination, Dropdown, Menu } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, ExperimentOutlined, SolutionOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Button, Input, Tabs, Typography, Space, Spin, Tooltip, Modal, Form, Pagination, Dropdown, Menu } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, ExperimentOutlined, SolutionOutlined } from '@ant-design/icons';
 import { getMuestras, getPedidos, takeSample, registerSampleResults, updateSample, updateSampleResults, deleteSample } from '../services/api';
 import TakeSampleForm from '../components/samples/TakeSampleForm';
 import RegisterResultsForm from '../components/samples/RegisterResultsForm';
@@ -147,7 +147,7 @@ const SamplesPage = () => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      cancelButtonColor: '#317abe',
       confirmButtonText: 'Sí, ¡dar de baja!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -213,14 +213,14 @@ const SamplesPage = () => {
 
       {loading ? <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div> : (
         <>
-          <Row gutter={[16, 24]}>
+          <Row gutter={[16, 24]} className='scale-up-ver-center'>
             {paginatedSamples.map(sample => {
               const isEnProceso = sample.status === true && sample.statusShowClient === false;
               const isConResultados = sample.status === true && sample.statusShowClient === true;
 
               const menu = (
                 <Menu>
-                  <Menu.Item key="editInfo" icon={<EditOutlined />} onClick={() => showEditSampleModal(sample)} disabled={!isEnProceso}>
+                  <Menu.Item  key="editInfo" icon={<EditOutlined />} onClick={() => showEditSampleModal(sample)} disabled={!isEnProceso}>
                     Editar Información
                   </Menu.Item>
                   <Menu.Item key="registerResults" icon={<SolutionOutlined />} onClick={() => showRegisterOrEditResultsModal(sample)} disabled={!isEnProceso}>
@@ -235,19 +235,23 @@ const SamplesPage = () => {
               return (
                 <Col xs={24} sm={12} md={8} key={sample._id}>
                   <Card
-                    title={<Space><ExperimentOutlined />{`M${sample._id.slice(-6).toUpperCase()}`}</Space>}
+                    title={<Space><ExperimentOutlined /><p style={{fontSize:'2vh', paddingTop:'1.5vh'}}>{`M${sample._id.slice(-6).toUpperCase()}`}</p></Space>}
                     actions={[
                       <Dropdown overlay={menu} trigger={['click']}>
-                        <Tooltip title="Acciones"><Button type="text" icon={<EditOutlined />} /></Tooltip>
+                        <Tooltip  title="Acciones">
+                          <Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" icon={<EditOutlined />} />
+                        </Tooltip>
                       </Dropdown>,
-                      <Tooltip title="Ver Detalles"><Button type="text" icon={<FileTextOutlined />} onClick={() => showDetailsModal(sample)} /></Tooltip>,
-                      <Tooltip title="Dar de Baja">
-                        <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(sample)} />
-                      </Tooltip>,
+                        <Tooltip title="Ver Detalles">
+                          <Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" icon={<FileTextOutlined />} onClick={() => showDetailsModal(sample)} />
+                        </Tooltip>,
+                        <Tooltip title="Dar de Baja">
+                          <Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(sample)} />
+                        </Tooltip>,
                     ]}
                   >
-                    <Text strong>{sampleTypeNames[sample.tipoMuestra] || 'Análisis'}</Text><br />
-                    <Text type="secondary">{sample.nombrePaciente}</Text>
+                    <Text strong style={{fontSize:'2vh'}}>{sampleTypeNames[sample.tipoMuestra] || 'Análisis'}</Text><br />
+                    <Text style={{fontSize:'2vh'}} type="secondary">{sample.nombrePaciente}</Text>
                   </Card>
                 </Col>
               );

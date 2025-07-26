@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/common/PrivateRoute';
 import { AdminRoute, PatientRoute } from './components/common/RoleBasedRoutes';
+import './animaciones.css'
 
 // Importa todas tus páginas
 import LoginPage from './pages/LoginPage';
@@ -15,6 +16,7 @@ import OrdersPage from './pages/OrdersPage';
 import SamplesPage from './pages/SamplesPage';
 import AccountPage from './pages/AccountPage';
 import PatientPortalPage from './pages/PatientPortalPage';
+import NotFoundRedirect from './components/common/NotFoundRedirect';
 
 function App() {
   return (
@@ -47,7 +49,11 @@ function App() {
           />
           
           {/* Redirección por defecto */}
-          <Route path="*" element={<Navigate to="/login" />} />
+
+          {/* ✅ Redirección de la raíz "/" */}
+          <Route path="/" element={<Navigate to="/login" />} />
+
+          <Route path="*" element={<NotFoundRedirect />} />
         </Routes>
       </AuthProvider>
     </Router>

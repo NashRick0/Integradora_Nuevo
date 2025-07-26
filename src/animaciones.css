@@ -1,0 +1,103 @@
+/*___________ Animacion ___________*/
+.scale-up-center {
+	animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+
+@keyframes scale-up-center {
+    0% {
+        transform: scale(0.5);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/*___________ de abajo hacia arriba___________*/
+.scale-up-ver-bottom {
+	animation: scale-up-ver-bottom 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+@keyframes scale-up-ver-bottom {
+    0% {
+        transform: scaleY(0.4);
+        transform-origin: 0% 100%;
+    }
+    100% {
+        transform: scaleY(1);
+        transform-origin: 0% 100%;
+    }
+}
+
+/*_________gelatina__________*/
+.jello-horizontal {
+	animation: jello-horizontal 0.9s both;
+}
+
+@keyframes jello-horizontal {
+    0% {
+        transform: scale3d(1, 1, 1);
+    }
+    30% {
+        transform: scale3d(1.25, 0.75, 1);
+    }
+    40% {
+        transform: scale3d(0.75, 1.25, 1);
+    }
+    50% {
+        transform: scale3d(1.15, 0.85, 1);
+    }
+    65% {
+        transform: scale3d(0.95, 1.05, 1);
+    }
+    75% {
+        transform: scale3d(1.05, 0.95, 1);
+    }
+    100% {
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+/*_________ centro afuera__________*/
+.scale-up-ver-center {
+	animation: scale-up-ver-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+@keyframes scale-up-ver-center {
+    0% {
+        transform: scaleY(0.4);
+    }
+    100% {
+        transform: scaleY(1);
+    }
+}
+
+/*_________enseñar___________*/
+.slide-fwd-center{
+	animation: slide-fwd-center 0.45s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+@keyframes slide-fwd-center {
+    0% {
+        transform: translateZ(0);
+    }
+    100% {
+        transform: translateZ(160px);
+    }
+}
+
+/*_________ izq abajo___________*/
+.scale-up-tl {
+	animation: scale-up-tl 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+}
+@keyframes scale-up-tl {
+    0% {
+        transform: scale(0.5);
+        transform-origin: 0% 0%;
+    }
+    100% {
+        transform: scale(1);
+        transform-origin: 0% 0%;
+    }
+}
+
+.cpsp{
+    Color: #317abe;
+}

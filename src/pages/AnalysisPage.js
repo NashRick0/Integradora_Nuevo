@@ -152,7 +152,7 @@ const AnalysisPage = () => {
           </Space>
         </Col>
       </Row>
-      <Row gutter={24}>
+      <Row gutter={24} className='scale-up-ver-center'>
         <Col xs={24} md={10}>
           <Card title="Pruebas">
             {loading ? <div style={{ textAlign: 'center', padding: '50px' }}><Spin /></div> : (
@@ -163,8 +163,8 @@ const AnalysisPage = () => {
                 renderItem={item => (
                   <List.Item
                     actions={[
-                      <Tooltip title="Editar Análisis"><Button type="text" shape="circle" icon={<EditOutlined />} onClick={() => showEditModal(item)} /></Tooltip>,
-                      <Tooltip title="Dar de Baja"><Button type="text" shape="circle" danger icon={<DeleteOutlined />} onClick={() => handleDelete(item)} /></Tooltip>,
+                      <Tooltip title="Editar Análisis"><Button style={{ padding:'2vh'}} type="text" shape="circle" icon={<EditOutlined />} onClick={() => showEditModal(item)} /></Tooltip>,
+                      <Tooltip title="Dar de Baja"><Button style={{ padding:'2vh'}} type="text" shape="circle" danger icon={<DeleteOutlined />} onClick={() => handleDelete(item)} /></Tooltip>,
                     ]}
                     onClick={() => setSelectedAnalisis(item)}
                     style={{ cursor: 'pointer', background: selectedAnalisis?._id === item._id ? '#e6f7ff' : 'transparent', borderRadius: '8px' }}
