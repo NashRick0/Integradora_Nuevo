@@ -15,7 +15,7 @@ const ChartCard = ({ title, data }) => {
   };
 
   return (
-    <Card title={title} style={{ height: '300px' }} className='scale-up-ver-bottom'>
+    <Card title={title} style={{ height: '300px' }}>
         {!data ? <Spin/> : (
             <div style={{ height: '220px' }}>
                 <Line options={options} data={data} />

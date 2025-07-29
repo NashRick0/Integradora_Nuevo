@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Button,Input,Tabs,
-  Avatar,Typography,Tag,
-  Space,Modal,message,
-  Form,Descriptions,Row,
-  Col,Card,Empty,
-  Spin,Pagination,Tooltip
+  Button,
+  Input,
+  Tabs,
+  Avatar,
+  Typography,
+  Tag,
+  Space,
+  Modal,
+  message,
+  Form,
+  Descriptions,
+  Row,
+  Col,
+  Card,
+  Empty,
+  Spin,
+  Pagination,
+  Tooltip,
 } from 'antd';
 import {
   UserOutlined,
@@ -19,7 +31,6 @@ import AddPatientForm from '../components/patients/AddPatientForm';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import axios from 'axios';
 
 const MySwal = withReactContent(Swal);
 const { Title, Text } = Typography;
@@ -34,7 +45,6 @@ const PatientsPage = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [currentUserRole, setCurrentUserRole] = useState(null);
   const [form] = Form.useForm();
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,17 +64,10 @@ const PatientsPage = () => {
 
   useEffect(() => {
     fetchUsers();
-
-    const userRoleFromStorage = localStorage.getItem('role');
-    
-    if (userRoleFromStorage) {
-      setCurrentUserRole(userRoleFromStorage);
-    }
   }, []);
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
-      if (user.rol !== 'patient') return false;
       if (filter !== 'all') {
         const statusMatch = filter === 'active' ? user.status === true : user.status === false;
         if (!statusMatch) return false;
@@ -120,17 +123,6 @@ const PatientsPage = () => {
   };
   // --- FIN DE LA ACTUALIZACIÓN ---
 
-  axios.interceptors.response.use(
-    response => response,
-    error => {
-      if (error.response?.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/login'; // o '/' si tu login está ahí
-      }
-      return Promise.reject(error);
-    }
-  );
-
   const showUserDetails = (user) => {
     setSelectedUser(user);
     setIsDetailsModalVisible(true);
@@ -157,7 +149,7 @@ const PatientsPage = () => {
   };
 
   return (
-    <div className='scale-up-tl'>
+    <div>
       <Row justify="space-between" align="middle" gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} md="auto">
           <Title level={3} style={{ margin: 0 }}>Gestión de Pacientes</Title>
@@ -180,30 +172,28 @@ const PatientsPage = () => {
         <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div>
       ) : (
         <>
-          <Row gutter={[16, 24]} className='scale-up-ver-center'>
+          <Row gutter={[16, 24]}>
             {paginatedUsers.length > 0 ? (
               paginatedUsers.map(user => (
                 <Col xs={24} sm={12} lg={8} key={user._id}>
                   <Card
                     actions={[
                       <Tooltip title="Ver Detalles">
-                        <Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" key="details" icon={<InfoCircleOutlined />} onClick={() => showUserDetails(user)} />
+                        <Button type="text" key="details" icon={<InfoCircleOutlined />} onClick={() => showUserDetails(user)} />
                       </Tooltip>,
                       <Tooltip title="Dar de Baja">
-                        <Button style={{ paddingRight:'3vw', paddingLeft:'3vw'}} type="text" danger key="delete" icon={<DeleteOutlined />} onClick={() => showDeleteConfirm(user)} />
+                        <Button type="text" danger key="delete" icon={<DeleteOutlined />} onClick={() => showDeleteConfirm(user)} />
                       </Tooltip>,
-                      
                     ]}
                   >
-                    <Card.Meta 
-                      avatar={<Avatar style={{ backgroundColor: '#89c2f0',padding:'1vw' }} icon={<UserOutlined />} />}
-                      //title={`${user.nombre} ${user.apellidoPaterno}`}
-                      title={<p style={{fontSize: '1.4vw'}}>{user.nombre} {user.apellidoPaterno} {user.apellidoMaterno}</p>}
+                    <Card.Meta
+                      avatar={<Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />}
+                      title={`${user.nombre} ${user.apellidoPaterno}`}
                       description={
                         <>
-                          <Text type="secondary" style={{fontSize:'1vw'}}>{user.correo}</Text>
+                          <Text type="secondary">{user.correo}</Text>
                           <br />
-                          <Tag color={user.status ? 'green' : 'volcano'} style={{margin:'1vh', padding:'.3vw', paddingLeft:'2vh', paddingRight: '2vh'}}>
+                          <Tag color={user.status ? 'green' : 'volcano'} style={{ marginTop: 8 }}>
                             {user.status ? 'ACTIVO' : 'INACTIVO'}
                           </Tag>
                         </>
@@ -232,7 +222,8 @@ const PatientsPage = () => {
         </>
       )}
 
-      <Modal title="Agregar Nuevo Paciente" 
+      <Modal 
+        title="Agregar Nuevo Paciente" 
         visible={isAddModalVisible} 
         onCancel={() => { setIsAddModalVisible(false); form.resetFields(); }} 
         onOk={handleAddUser} 
@@ -240,10 +231,11 @@ const PatientsPage = () => {
         cancelText="Cancelar"
         okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
       >
-        <AddPatientForm form={form} userRole={currentUserRole}/>
+        <AddPatientForm form={form} />
       </Modal>
-      
-      <Modal title="Detalles del Paciente" 
+
+      <Modal 
+        title="Detalles del Paciente" 
         visible={isDetailsModalVisible} 
         onCancel={() => setIsDetailsModalVisible(false)} 
         footer={[
@@ -254,7 +246,6 @@ const PatientsPage = () => {
           >
             Cerrar
           </Button>
-          
         ]}
       >
         {selectedUser && (
@@ -267,7 +258,6 @@ const PatientsPage = () => {
           </Descriptions>
         )}
       </Modal>
-
     </div>
   );
 };

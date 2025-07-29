@@ -8,7 +8,6 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      console.log(token)
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
@@ -28,7 +27,6 @@ export const addUsuario = (userData) => api.post('/usuarios', userData);
 export const deleteUsuario = (userId) => api.delete(`/usuarios/${userId}`);
 export const changePassword = (userId, passwordData) => api.put(`/usuarios/${userId}`, passwordData);
 export const requestPasswordReset = (emailData) => api.post('/usuarios/forget', emailData);
-export const logoutUser = () => api.delete('/usuarios/login');
 // --- Servicios de Análisis ---
 export const getAnalisis = () => api.get('/analisis');
 export const addAnalisis = (analisisData) => api.post('/analisis', analisisData);
