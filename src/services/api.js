@@ -17,6 +17,28 @@ api.interceptors.request.use(
   }
 );
 
+api.interceptors.response.use(
+  // El primer argumento es para respuestas exitosas (2xx)
+  (response) => {
+    // Si la respuesta es exitosa, no hacemos nada y la devolvemos.
+    return response;
+  },
+  // El segundo argumento es para respuestas con error
+  (error) => {
+    // Verificamos si el error tiene una respuesta y si el estado es 401
+    if (error.response && error.response.status === 401) {
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      window.location.href = '/login';
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+
 export const loginUser = (credentials) => api.post('/usuarios/login', credentials);
 export const getLdrData = () => api.get('/ldr/lightControl_001');
 export const getTempWetData = () => api.get('/tempwet/tempWetController_001');

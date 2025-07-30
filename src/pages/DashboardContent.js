@@ -36,25 +36,28 @@ const DashboardContent = () => {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div>
       ) : (
-        // --- INICIO DE CAMBIOS ---
-        <Row gutter={[24, 24]}>
-          {/* Fila Superior */}
-          <Col xs={24} md={12}>
-            <ChartCard title="Temperatura del Laboratorio" data={{ labels: chartData.labels, datasets: [{ label: '°C', data: chartData.tempLab, borderColor: '#ff4d4f', backgroundColor: '#fff1f0' }]}} />
-          </Col>
-          <Col xs={24} md={12}>
-            <ChartCard title="Humedad del Laboratorio" data={{ labels: chartData.labels, datasets: [{ label: '%', data: chartData.wetLab, borderColor: '#52c41a', backgroundColor: '#f6ffed' }]}} />
-          </Col>
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Se añade una comprobación para asegurar que chartData no sea null
+        chartData && (
+          <Row gutter={[24, 24]}>
+            {/* Fila Superior */}
+            <Col xs={24} md={12}>
+              <ChartCard title="Temperatura del Laboratorio" data={{ labels: chartData.labels, datasets: [{ label: '°C', data: chartData.tempLab, borderColor: '#ff4d4f', backgroundColor: '#fff1f0' }]}} />
+            </Col>
+            <Col xs={24} md={12}>
+              <ChartCard title="Humedad del Laboratorio" data={{ labels: chartData.labels, datasets: [{ label: '%', data: chartData.wetLab, borderColor: '#52c41a', backgroundColor: '#f6ffed' }]}} />
+            </Col>
 
-          {/* Fila Inferior */}
-          <Col xs={24} md={12}>
-              <ChartCard title="Temperatura del Refrigerador" data={{ labels: chartData.labels, datasets: [{ label: '°C', data: chartData.tempRecipient, borderColor: '#40a9ff', backgroundColor: '#e6f7ff' }]}} />
-          </Col>
-          <Col xs={24} md={12}>
-            <LdrCard />
-          </Col>
-        </Row>
-        // --- FIN DE CAMBIOS ---
+            {/* Fila Inferior */}
+            <Col xs={24} md={12}>
+                <ChartCard title="Temperatura del Refrigerador" data={{ labels: chartData.labels, datasets: [{ label: '°C', data: chartData.tempRecipient, borderColor: '#40a9ff', backgroundColor: '#e6f7ff' }]}} />
+            </Col>
+            <Col xs={24} md={12}>
+              <LdrCard />
+            </Col>
+          </Row>
+        )
+        // --- FIN DE LA CORRECCIÓN ---
       )}
     </div>
   );

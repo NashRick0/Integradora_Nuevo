@@ -82,9 +82,16 @@ const LdrCard = () => {
   }
 
   const getStatus = (value) => {
-    if (value < 800) return { color: 'success', text: 'Seguro' };
-    if (value >= 800 && value <= 900) return { color: 'warning', text: 'Precaución' };
-    return { color: 'error', text: 'Peligro' };
+    console.log('Valor LDR:', value);
+    if (value === null || value === undefined) {
+      return { color: 'default', text: 'Sin Datos' };
+    }else if (value < 800){
+      return { color: 'success', text: 'Seguro' };
+    } else if(value >= 800 && value <= 900){
+      return { color: 'warning', text: 'Precaución' };
+    } else{
+      return { color: 'error', text: 'Peligro' };
+    }
   };
 
   const status = getStatus(ldr.ldr);
