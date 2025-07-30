@@ -9,7 +9,18 @@ const AnalysisForm = ({ form }) => {
           <Form.Item
             name="nombre"
             label="Nombre del Análisis"
-            rules={[{ required: true, message: 'Por favor, ingresa el nombre.' }]}
+            rules={[
+              { 
+                required: true, 
+                message: 'Por favor, ingresa el nombre.' 
+              },
+              // --- INICIO DE LA CORRECCIÓN ---
+              {
+                pattern: /[a-zA-Z]/, // Expresión regular que busca al menos una letra
+                message: 'El nombre debe contener caracteres válidos (no solo números).',
+              },
+              // --- FIN DE LA CORRECCIÓN ---
+            ]}
           >
             <Input placeholder="Ej. Química Sanguínea" />
           </Form.Item>
@@ -36,7 +47,18 @@ const AnalysisForm = ({ form }) => {
           <Form.Item
             name="descripcion"
             label="Descripción"
-            rules={[{ required: true, message: 'Por favor, ingresa una descripción.' }]}
+            rules={[
+              { 
+                required: true, 
+                message: 'Por favor, ingresa una descripción.' 
+              },
+              // --- INICIO DE LA CORRECCIÓN ---
+              {
+                pattern: /[a-zA-Z]/, // Misma validación que para el nombre
+                message: 'La descripción debe contener caracteres válidos (no solo números).',
+              },
+              // --- FIN DE LA CORRECCIÓN ---
+            ]}
           >
             <Input.TextArea rows={4} placeholder="Describe el análisis..." />
           </Form.Item>

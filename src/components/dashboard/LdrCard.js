@@ -82,7 +82,6 @@ const LdrCard = () => {
   }
 
   const getStatus = (value) => {
-    console.log('Valor LDR:', value);
     if (value === null || value === undefined) {
       return { color: 'default', text: 'Sin Datos' };
     }else if (value < 800){
