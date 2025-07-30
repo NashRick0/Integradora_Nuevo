@@ -42,19 +42,12 @@ const SamplesPage = () => {
     try {
       const [samplesRes, ordersRes] = await Promise.all([getMuestras(), getPedidos()]);
       setSamples(samplesRes.data.muestrasList || []);
-      
-      // --- INICIO DE LA CORRECCIÓN ---
-      // Filtra los pedidos pendientes para que solo incluyan los tipos de análisis válidos para una muestra
       const allPendingOrders = ordersRes.data.data.filter(o => o.estado === 'pendiente') || [];
       const validPendingOrders = allPendingOrders.filter(order => {
         if (!order.analisis || order.analisis.length === 0) return false;
-        const analysisName = order.analisis[0].nombre.toLowerCase();
-        // Solo permite pedidos que contengan estos análisis específicos
-        return analysisName.includes('biometria') || analysisName.includes('quimica');
+        return order.analisis.some(a => a.nombre.toLowerCase().includes('biometria') || a.nombre.toLowerCase().includes('quimica'));
       });
       setPendingOrders(validPendingOrders);
-      // --- FIN DE LA CORRECCIÓN ---
-
     } catch (error) {
       MySwal.fire('Error', 'No se pudieron cargar los datos necesarios.', 'error');
     } finally {
@@ -82,8 +75,16 @@ const SamplesPage = () => {
       }
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase();
-        const sampleIdMatch = sample._id.slice(-6).toLowerCase().includes(lowerSearchTerm);
+        
+        // --- INICIO DE LA CORRECCIÓN ---
+        // 1. Se construye el ID visible (ej. "M1F922A") en minúsculas para la comparación.
+        const displayedId = `m${sample._id.slice(-6)}`.toLowerCase();
+        
+        // 2. Se compara el término de búsqueda con el ID visible y con el nombre del paciente.
+        const sampleIdMatch = displayedId.includes(lowerSearchTerm);
         const patientNameMatch = sample.nombrePaciente.toLowerCase().includes(lowerSearchTerm);
+        // --- FIN DE LA CORRECCIÓN ---
+
         return sampleIdMatch || patientNameMatch;
       }
       return true;
@@ -99,26 +100,20 @@ const SamplesPage = () => {
     try {
       const values = await takeSampleForm.validateFields();
       const order = pendingOrders.find(o => o._id === values.pedidoId);
-
       if (!order || !order.analisis || order.analisis.length === 0) {
         MySwal.fire('Error', 'El pedido seleccionado no contiene análisis válidos.', 'error');
         return;
       }
-
-      // Crea una promesa de "toma de muestra" para cada análisis en el pedido
       const sampleCreationPromises = order.analisis.map(analisis => {
         const analysisName = analisis.nombre.toLowerCase();
         let tipoMuestra;
-
         if (analysisName.includes('biometria')) {
           tipoMuestra = 'biometriaHematica';
         } else if (analysisName.includes('quimica')) {
           tipoMuestra = 'quimicaSanguinea';
         } else {
-          // Si el análisis no es de un tipo válido, se omite
           return null;
         }
-
         const payload = {
           observaciones: values.observaciones || '',
           nombrePaciente: `${order.usuarioId.nombre} ${order.usuarioId.apellidoPaterno}`,
@@ -127,21 +122,16 @@ const SamplesPage = () => {
           pedidoId: values.pedidoId,
         };
         return takeSample(payload);
-      }).filter(Boolean); // Filtra los nulos si hubo análisis no válidos
-
+      }).filter(Boolean);
       if (sampleCreationPromises.length === 0) {
         MySwal.fire('Atención', 'El pedido no contiene análisis que requieran toma de muestra.', 'info');
         return;
       }
-
-      // Ejecuta todas las promesas en paralelo
       await Promise.all(sampleCreationPromises);
-
       setTakeSampleModalVisible(false);
       takeSampleForm.resetFields();
       await MySwal.fire('¡Muestras Tomadas!', `Se han registrado ${sampleCreationPromises.length} nueva(s) muestra(s).`, 'success');
       fetchInitialData();
-
     } catch (errorInfo) {
       if (errorInfo.errorFields) return;
       const errorMessage = errorInfo.response?.data?.message || 'Ocurrió un problema al registrar las muestras.';
@@ -155,7 +145,6 @@ const SamplesPage = () => {
         const apiCall = selectedSample.statusShowClient 
             ? updateSampleResults(selectedSample._id, values)
             : registerSampleResults(selectedSample._id, values);
-
         await apiCall;
         setRegisterResultsModalVisible(false);
         registerResultsForm.resetFields();
@@ -196,11 +185,7 @@ const SamplesPage = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         deleteSample(sample._id).then(async () => {
-          await MySwal.fire(
-            '¡Dado de baja!',
-            'La muestra ha sido dada de baja.',
-            'success'
-          );
+          await MySwal.fire('¡Dado de baja!', 'La muestra ha sido dada de baja.', 'success');
           fetchInitialData();
         }).catch((error) => {
           const errorMessage = error.response?.data?.message || 'No se pudo dar de baja la muestra.';
@@ -257,44 +242,46 @@ const SamplesPage = () => {
       {loading ? <div style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /></div> : (
         <>
           <Row gutter={[16, 24]}>
-            {paginatedSamples.map(sample => {
-              const isEnProceso = sample.status === true && sample.statusShowClient === false;
-              const isConResultados = sample.status === true && sample.statusShowClient === true;
-
-              const menu = (
-                <Menu>
-                  <Menu.Item key="editInfo" icon={<EditOutlined />} onClick={() => showEditSampleModal(sample)} disabled={!isEnProceso}>
-                    Editar Información
-                  </Menu.Item>
-                  <Menu.Item key="registerResults" icon={<SolutionOutlined />} onClick={() => showRegisterOrEditResultsModal(sample)} disabled={!isEnProceso}>
-                    Registrar Resultados
-                  </Menu.Item>
-                  <Menu.Item key="editResults" icon={<SolutionOutlined />} onClick={() => showRegisterOrEditResultsModal(sample)} disabled={!isConResultados}>
-                    Editar Resultados
-                  </Menu.Item>
-                </Menu>
-              );
-
-              return (
-                <Col xs={24} sm={12} md={8} key={sample._id}>
-                  <Card
-                    title={<Space><ExperimentOutlined />{`M${sample._id.slice(-6).toUpperCase()}`}</Space>}
-                    actions={[
-                      <Dropdown overlay={menu} trigger={['click']}>
-                        <Tooltip title="Acciones"><Button type="text" icon={<EditOutlined />} /></Tooltip>
-                      </Dropdown>,
-                      <Tooltip title="Ver Detalles"><Button type="text" icon={<FileTextOutlined />} onClick={() => showDetailsModal(sample)} /></Tooltip>,
-                      <Tooltip title="Dar de Baja">
-                        <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(sample)} />
-                      </Tooltip>,
-                    ]}
-                  >
-                    <Text strong>{sampleTypeNames[sample.tipoMuestra] || 'Análisis'}</Text><br />
-                    <Text type="secondary">{sample.nombrePaciente}</Text>
-                  </Card>
-                </Col>
-              );
-            })}
+            {paginatedSamples.length > 0 ? (
+              paginatedSamples.map(sample => {
+                const isEnProceso = sample.status === true && sample.statusShowClient === false;
+                const isConResultados = sample.status === true && sample.statusShowClient === true;
+                const menu = (
+                  <Menu>
+                    <Menu.Item key="editInfo" icon={<EditOutlined />} onClick={() => showEditSampleModal(sample)} disabled={!isEnProceso}>
+                      Editar Información
+                    </Menu.Item>
+                    <Menu.Item key="registerResults" icon={<SolutionOutlined />} onClick={() => showRegisterOrEditResultsModal(sample)} disabled={!isEnProceso}>
+                      Registrar Resultados
+                    </Menu.Item>
+                    <Menu.Item key="editResults" icon={<SolutionOutlined />} onClick={() => showRegisterOrEditResultsModal(sample)} disabled={!isConResultados}>
+                      Editar Resultados
+                    </Menu.Item>
+                  </Menu>
+                );
+                return (
+                  <Col xs={24} sm={12} md={8} key={sample._id}>
+                    <Card
+                      title={<Space><ExperimentOutlined />{`M${sample._id.slice(-6).toUpperCase()}`}</Space>}
+                      actions={[
+                        <Dropdown overlay={menu} trigger={['click']}>
+                          <Tooltip title="Acciones"><Button type="text" icon={<EditOutlined />} /></Tooltip>
+                        </Dropdown>,
+                        <Tooltip title="Ver Detalles"><Button type="text" icon={<FileTextOutlined />} onClick={() => showDetailsModal(sample)} /></Tooltip>,
+                        <Tooltip title="Dar de Baja"><Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(sample)} /></Tooltip>,
+                      ]}
+                    >
+                      <Text strong>{sampleTypeNames[sample.tipoMuestra] || 'Análisis'}</Text><br />
+                      <Text type="secondary">{sample.nombrePaciente}</Text>
+                    </Card>
+                  </Col>
+                );
+              })
+            ) : (
+              <Col span={24} style={{ textAlign: 'center', marginTop: '48px' }}>
+                <Empty description="No se encontraron muestras que coincidan con los filtros." />
+              </Col>
+            )}
           </Row>
           
           {filteredSamples.length > pageSize && (
