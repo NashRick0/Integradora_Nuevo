@@ -42,7 +42,19 @@ const SamplesPage = () => {
     try {
       const [samplesRes, ordersRes] = await Promise.all([getMuestras(), getPedidos()]);
       setSamples(samplesRes.data.muestrasList || []);
-      setPendingOrders(ordersRes.data.data.filter(o => o.estado === 'pendiente') || []);
+      
+      // --- INICIO DE LA CORRECCIÓN ---
+      // Filtra los pedidos pendientes para que solo incluyan los tipos de análisis válidos para una muestra
+      const allPendingOrders = ordersRes.data.data.filter(o => o.estado === 'pendiente') || [];
+      const validPendingOrders = allPendingOrders.filter(order => {
+        if (!order.analisis || order.analisis.length === 0) return false;
+        const analysisName = order.analisis[0].nombre.toLowerCase();
+        // Solo permite pedidos que contengan estos análisis específicos
+        return analysisName.includes('biometria') || analysisName.includes('quimica');
+      });
+      setPendingOrders(validPendingOrders);
+      // --- FIN DE LA CORRECCIÓN ---
+
     } catch (error) {
       MySwal.fire('Error', 'No se pudieron cargar los datos necesarios.', 'error');
     } finally {
@@ -87,21 +99,52 @@ const SamplesPage = () => {
     try {
       const values = await takeSampleForm.validateFields();
       const order = pendingOrders.find(o => o._id === values.pedidoId);
-      const payload = {
-        observaciones: values.observaciones || '',
-        nombrePaciente: `${order.usuarioId.nombre} ${order.usuarioId.apellidoPaterno}`,
-        idusuario: order.usuarioId._id,
-        tipoMuestra: order.analisis[0].nombre.toLowerCase().includes('biometria') ? 'biometriaHematica' : 'quimicaSanguinea',
-        pedidoId: values.pedidoId,
-      };
-      await takeSample(payload);
+
+      if (!order || !order.analisis || order.analisis.length === 0) {
+        MySwal.fire('Error', 'El pedido seleccionado no contiene análisis válidos.', 'error');
+        return;
+      }
+
+      // Crea una promesa de "toma de muestra" para cada análisis en el pedido
+      const sampleCreationPromises = order.analisis.map(analisis => {
+        const analysisName = analisis.nombre.toLowerCase();
+        let tipoMuestra;
+
+        if (analysisName.includes('biometria')) {
+          tipoMuestra = 'biometriaHematica';
+        } else if (analysisName.includes('quimica')) {
+          tipoMuestra = 'quimicaSanguinea';
+        } else {
+          // Si el análisis no es de un tipo válido, se omite
+          return null;
+        }
+
+        const payload = {
+          observaciones: values.observaciones || '',
+          nombrePaciente: `${order.usuarioId.nombre} ${order.usuarioId.apellidoPaterno}`,
+          idusuario: order.usuarioId._id,
+          tipoMuestra: tipoMuestra,
+          pedidoId: values.pedidoId,
+        };
+        return takeSample(payload);
+      }).filter(Boolean); // Filtra los nulos si hubo análisis no válidos
+
+      if (sampleCreationPromises.length === 0) {
+        MySwal.fire('Atención', 'El pedido no contiene análisis que requieran toma de muestra.', 'info');
+        return;
+      }
+
+      // Ejecuta todas las promesas en paralelo
+      await Promise.all(sampleCreationPromises);
+
       setTakeSampleModalVisible(false);
       takeSampleForm.resetFields();
-      await MySwal.fire('¡Muestra Tomada!', 'La muestra ha sido registrada.', 'success');
+      await MySwal.fire('¡Muestras Tomadas!', `Se han registrado ${sampleCreationPromises.length} nueva(s) muestra(s).`, 'success');
       fetchInitialData();
+
     } catch (errorInfo) {
       if (errorInfo.errorFields) return;
-      const errorMessage = errorInfo.response?.data?.message || 'Ocurrió un problema.';
+      const errorMessage = errorInfo.response?.data?.message || 'Ocurrió un problema al registrar las muestras.';
       MySwal.fire('Error', errorMessage, 'error');
     }
   };
@@ -158,7 +201,7 @@ const SamplesPage = () => {
             'La muestra ha sido dada de baja.',
             'success'
           );
-          fetchInitialData(); // Refresca la lista de muestras
+          fetchInitialData();
         }).catch((error) => {
           const errorMessage = error.response?.data?.message || 'No se pudo dar de baja la muestra.';
           MySwal.fire('Error', errorMessage, 'error');
@@ -267,27 +310,17 @@ const SamplesPage = () => {
         </>
       )}
 
-      <Modal 
-        title="Tomar Nueva Muestra" 
-        visible={isTakeSampleModalVisible} 
-        onCancel={() => setTakeSampleModalVisible(false)} 
-        onOk={handleTakeSample} 
-        okText="Guardar Muestra"
-        cancelText="Cancelar"
-        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
-      >
+      <Modal title="Tomar Nueva Muestra" visible={isTakeSampleModalVisible} onCancel={() => setTakeSampleModalVisible(false)} onOk={handleTakeSample} okText="Guardar Muestra">
         <TakeSampleForm form={takeSampleForm} pendingOrders={pendingOrders} />
       </Modal>
-
+      
       <Modal
         title={selectedSample?.statusShowClient ? 'Editar Resultados' : 'Registrar Resultados'}
         visible={isRegisterResultsModalVisible}
         onCancel={() => setRegisterResultsModalVisible(false)}
         onOk={handleRegisterOrUpdateResults}
         okText="Guardar"
-        cancelText="Cancelar"
         width={700}
-        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
       >
         <RegisterResultsForm form={registerResultsForm} sampleType={selectedSample?.tipoMuestra} />
       </Modal>
@@ -298,8 +331,6 @@ const SamplesPage = () => {
         onCancel={() => setIsEditSampleModalVisible(false)}
         onOk={handleEditSample}
         okText="Guardar Cambios"
-        cancelText="Cancelar"
-        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
       >
         <EditSampleForm form={editSampleForm} pendingOrders={pendingOrders} />
       </Modal>
@@ -308,15 +339,7 @@ const SamplesPage = () => {
           title={`Resultados de Muestra M${selectedSample?._id.slice(-6).toUpperCase()}`}
           visible={isDetailsModalVisible}
           onCancel={() => setIsDetailsModalVisible(false)}
-          footer={[
-            <Button 
-              key="close"
-              onClick={() => setIsDetailsModalVisible(false)}
-              style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
-            >
-              Cerrar
-            </Button>
-          ]}
+          footer={null}
           width={800}
       >
           <SampleResultDetail sample={selectedSample} />
