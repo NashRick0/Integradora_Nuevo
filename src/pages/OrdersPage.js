@@ -99,23 +99,53 @@ const OrdersPage = () => {
   }, [filteredOrders, currentPage, pageSize]);
 
   const handleAddOk = async () => {
-    try {
-      const values = await addForm.validateFields();
-      const selectedAnalyses = values.analisisIds.map(id => {
-        const analisis = analyses.find(a => a._id === id);
-        return { analisisId: analisis._id, nombre: analisis.nombre, precio: analisis.costo, descripcion: analisis.descripcion };
-      });
-      const orderPayload = {
-        usuarioId: values.usuarioId, analisis: selectedAnalyses, porcentajeDescuento: values.porcentajeDescuento || 0,
-        notas: values.notas || '', anticipo: { monto: values.montoAnticipo || 0 },
+  try {
+    const values = await addForm.validateFields();
+
+    const selectedAnalyses = values.analisisIds.map(id => {
+      const analisis = analyses.find(a => a._id === id);
+      return {
+        analisisId: analisis._id,
+        nombre: analisis.nombre,
+        precio: analisis.costo,
+        descripcion: analisis.descripcion
       };
-      await addPedido(orderPayload);
-      setIsAddModalVisible(false);
-      addForm.resetFields();
-      await MySwal.fire('¡Creado!', 'El pedido ha sido registrado con éxito.', 'success');
-      fetchInitialData();
-    } catch (errorInfo) { /* ... manejo de errores ... */ }
-  };
+    });
+
+    const subtotal = selectedAnalyses.reduce((sum, item) => sum + item.precio, 0);
+
+    // Aplica el descuento al subtotal para obtener el total real a pagar
+    const descuento = values.porcentajeDescuento || 0;
+    const totalConDescuento = subtotal - (subtotal * descuento / 100);
+
+    const montoIngresado = parseFloat(values.montoAnticipo || 0);
+
+    let montoAnticipo = montoIngresado;
+    if (montoIngresado > totalConDescuento) {
+      montoAnticipo = totalConDescuento;
+    }
+
+    const orderPayload = {
+      usuarioId: values.usuarioId,
+      analisis: selectedAnalyses,
+      porcentajeDescuento: descuento,
+      notas: values.notas || '',
+      anticipo: {
+        monto: montoAnticipo
+      }
+    };
+
+    await addPedido(orderPayload);
+
+    setIsAddModalVisible(false);
+    addForm.resetFields();
+    await MySwal.fire('¡Creado!', 'El pedido ha sido registrado con éxito.', 'success');
+    fetchInitialData();
+  } catch (errorInfo) {
+    console.error('❌ Error al registrar pedido:', errorInfo);
+    MySwal.fire('Error', 'No se pudo registrar el pedido.', 'error');
+  }
+};
 
   const handleEditOk = async () => {
     try {
@@ -203,59 +233,73 @@ const OrdersPage = () => {
       )}
 
       {/* Modal para Agregar Pedido */}
-      <Modal
-        title={
-          selectedOrder?._id
-            ? `Detalles del Pedido: ${selectedOrder._id.slice(-6).toUpperCase()}`
-            : 'Detalles del Pedido'
-        }
-        visible={isDetailsModalVisible}
-        onCancel={() => setIsDetailsModalVisible(false)}
-        footer={
-          <Row justify="space-between" style={{ width: '100%' }}>
-            <Col>
-              <Button
-                key="close"
-                onClick={() => setIsDetailsModalVisible(false)}
-                style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
-              >
-                Cerrar
-              </Button>
-            </Col>
-            <Col>
-              <Button
-                key="generate"
-                icon={<FilePdfOutlined />}
-                style={{ background: '#52c41a', borderColor: '#52c41a', color: 'white' }}
-                onClick={() => {
-                  if (!selectedOrder) return;
+      <Modal 
+            title="Registrar Nuevo Pedido" 
+            visible={isAddModalVisible} 
+            onCancel={() => setIsAddModalVisible(false)} 
+            onOk={handleAddOk} 
+            okText="Guardar Pedido" 
+            cancelText="Cancelar"
+            width={700}
+            okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
+          >
+            <OrderForm form={addForm} patients={patients} analyses={analyses} />
+          </Modal>
 
-                  const ticketData = {
-                    id: selectedOrder._id,
-                    nombrePaciente: selectedOrder.usuarioId
-                      ? `${selectedOrder.usuarioId.nombre || ''} ${selectedOrder.usuarioId.apellidoPaterno || ''}`.trim()
-                      : 'Paciente Desconocido',
-                    fecha: selectedOrder.fechaCreacion || null,
-                    total: Number(selectedOrder.total) || 0,
-                    pagado: Number(selectedOrder.anticipo?.monto) || 0,
-                    faltaPorPagar:
-                      (Number(selectedOrder.total) || 0) - (Number(selectedOrder.anticipo?.monto) || 0),
-                    estudios: (selectedOrder.analisis || []).map((a) => ({
-                      nombre: a.nombre || 'Análisis sin nombre',
-                      precio: Number(a.precio) || 0,
-                    })),
-                  };
+          {/* Modal para Ver Detalles */}
+          <Modal
+      title={
+    selectedOrder?._id
+      ? `Detalles del Pedido: ${selectedOrder._id.slice(-6).toUpperCase()}`
+      : 'Detalles del Pedido'
+  }
+  visible={isDetailsModalVisible}
+  onCancel={() => setIsDetailsModalVisible(false)}
+  footer={
+    <Row justify="space-between" style={{ width: '100%' }}>
+      <Col>
+        <Button
+          key="close"
+          onClick={() => setIsDetailsModalVisible(false)}
+          style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
+        >
+          Cerrar
+        </Button>
+      </Col>
+      <Col>
+        <Button
+          key="generate"
+          icon={<FilePdfOutlined />}
+          style={{ background: '#52c41a', borderColor: '#52c41a', color: 'white' }}
+          onClick={() => {
+            if (!selectedOrder) return;
 
-                  generatePurchaseTicket(ticketData);
-                }}
-              >
-                Generar Ticket de Compra
-              </Button>
-            </Col>
-          </Row>
-        }
-        width={600}
-    >
+            const ticketData = {
+              id: selectedOrder._id,
+              nombrePaciente: selectedOrder.usuarioId
+                ? `${selectedOrder.usuarioId.nombre || ''} ${selectedOrder.usuarioId.apellidoPaterno || ''}`.trim()
+                : 'Paciente Desconocido',
+              fecha: selectedOrder.fechaCreacion || null,
+              total: Number(selectedOrder.total) || 0,
+              pagado: Number(selectedOrder.anticipo?.monto) || 0,
+              faltaPorPagar:
+                (Number(selectedOrder.total) || 0) - (Number(selectedOrder.anticipo?.monto) || 0),
+              estudios: (selectedOrder.analisis || []).map((a) => ({
+                nombre: a.nombre || 'Análisis sin nombre',
+                precio: Number(a.precio) || 0,
+              })),
+            };
+
+            generatePurchaseTicket(ticketData);
+          }}
+        >
+          Generar Ticket de Compra
+        </Button>
+      </Col>
+    </Row>
+  }
+  width={600}
+>
       {selectedOrder && (
         <Descriptions bordered column={1} size="small">
           <Descriptions.Item label="Paciente">

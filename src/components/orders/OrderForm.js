@@ -7,6 +7,7 @@ const { Text } = Typography;
 const OrderForm = ({ form, patients, analyses }) => {
   const [total, setTotal] = useState(0);
   const [faltante, setFaltante] = useState(0);
+  const [feria, setFeria] = useState(0);
 
   const calcularTotales = (changedValues, allValues) => {
     const selectedIds = allValues.analisisIds || [];
@@ -19,10 +20,20 @@ const OrderForm = ({ form, patients, analyses }) => {
     }, 0);
 
     const totalConDescuento = totalBruto - (totalBruto * descuento) / 100;
+
+    const feriaCliente = anticipo > totalConDescuento ? anticipo - totalConDescuento : 0;
     const faltantePorPagar = Math.max(totalConDescuento - anticipo, 0);
 
+    // Actualiza estados
     setTotal(totalConDescuento);
     setFaltante(faltantePorPagar);
+    setFeria(feriaCliente);
+
+    // Actualiza valores que se mandarán al backend
+    form.setFieldsValue({
+      totalCalculado: totalConDescuento,
+      feriaCalculada: feriaCliente,
+    });
   };
 
   return (
@@ -33,6 +44,7 @@ const OrderForm = ({ form, patients, analyses }) => {
       onValuesChange={calcularTotales}
     >
       <Row gutter={16}>
+        {/* PACIENTE */}
         <Col span={24}>
           <Form.Item
             name="usuarioId"
@@ -56,6 +68,7 @@ const OrderForm = ({ form, patients, analyses }) => {
           </Form.Item>
         </Col>
 
+        {/* ANALISIS */}
         <Col span={24}>
           <Form.Item
             name="analisisIds"
@@ -79,6 +92,7 @@ const OrderForm = ({ form, patients, analyses }) => {
           </Form.Item>
         </Col>
 
+        {/* DESCUENTO */}
         <Col span={12}>
           <Form.Item
             name="porcentajeDescuento"
@@ -89,6 +103,7 @@ const OrderForm = ({ form, patients, analyses }) => {
           </Form.Item>
         </Col>
 
+        {/* ANTICIPO */}
         <Col span={12}>
           <Form.Item
             name="montoAnticipo"
@@ -99,13 +114,14 @@ const OrderForm = ({ form, patients, analyses }) => {
           </Form.Item>
         </Col>
 
+        {/* NOTAS */}
         <Col span={24}>
           <Form.Item name="notas" label="Notas Adicionales">
             <Input.TextArea rows={3} placeholder="Ej. Paciente en ayunas" />
           </Form.Item>
         </Col>
 
-        {/* Total calculado */}
+        {/* TOTAL */}
         <Col span={12}>
           <Text strong>Total a pagar (con descuento):</Text>
           <div style={{ padding: '8px 0', fontSize: '18px' }}>
@@ -113,13 +129,27 @@ const OrderForm = ({ form, patients, analyses }) => {
           </div>
         </Col>
 
-        {/* Faltante por pagar */}
+        {/* FALTANTE */}
         <Col span={12}>
           <Text strong>Faltante por pagar:</Text>
           <div style={{ padding: '8px 0', fontSize: '18px' }}>
             ${faltante.toFixed(2)}
           </div>
         </Col>
+
+        {/* FERIA - solo si aplica */}
+        {feria > 0 && (
+          <Col span={24}>
+            <Text type="success" strong>Cambio:</Text>
+            <div style={{ padding: '8px 0', fontSize: '18px', color: 'green' }}>
+              ${feria.toFixed(2)}
+            </div>
+          </Col>
+        )}
+
+        {/* CAMPOS OCULTOS */}
+        <Form.Item name="totalCalculado" hidden />
+        <Form.Item name="feriaCalculada" hidden />
 
       </Row>
     </Form>
