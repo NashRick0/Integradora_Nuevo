@@ -21,10 +21,10 @@ const DashboardPage = () => {
   const visibleMenuItems = useMemo(() => {
     const allItems = [
       { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard', roles: ['admin', 'accounting', 'laboratory'] },
-      { key: '/dashboard/pacientes', icon: <TeamOutlined />, label: 'Pacientes', roles: ['admin', 'laboratory'] },
+      { key: '/dashboard/pacientes', icon: <TeamOutlined />, label: 'Pacientes', roles: ['admin', 'laboratory', 'accounting'] },
       { key: '/dashboard/pedidos', icon: <FileTextOutlined />, label: 'Pedidos', roles: ['admin', 'accounting'] },
       { key: '/dashboard/muestras', icon: <ExperimentOutlined />, label: 'Muestras', roles: ['admin', 'laboratory'] },
-      { key: '/dashboard/analisis', icon: <BarChartOutlined />, label: 'Análisis', roles: ['admin', 'accounting', 'laboratory'] },
+      { key: '/dashboard/analisis', icon: <BarChartOutlined />, label: 'Análisis', roles: ['admin', 'accounting'] },
     ];
     
     if (!user?.rol) {

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Form, Input, Select, DatePicker, Row, Col } from 'antd';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
 
-const AddPatientForm = ({ form }) => {
+const AddPatientForm = ({ form, userRole }) => {
+
   return (
     <Form form={form} layout="vertical" name="addPatientForm">
       <Row gutter={16}>
@@ -64,10 +65,17 @@ const AddPatientForm = ({ form }) => {
             rules={[{ required: true, message: 'Por favor, selecciona un rol.' }]}
           >
             <Select placeholder="Selecciona un rol">
-              <Option value="admin">Admin</Option>
-              <Option value="accounting">Contabilidad</Option>
-              <Option value="laboratory">Laboratorio</Option>
-              <Option value="patient">Paciente</Option>
+              {/* <-- CAMBIO: Lógica para mostrar las opciones --> */}
+              {userRole === 'admin' ? (
+                <>
+                  <Option value="admin">Admin</Option>
+                  <Option value="accounting">Contabilidad</Option>
+                  <Option value="laboratory">Laboratorio</Option>
+                  <Option value="patient">Paciente</Option>
+                </>
+              ) : (
+                <Option value="patient">Paciente</Option>
+              )}
             </Select>
           </Form.Item>
         </Col>

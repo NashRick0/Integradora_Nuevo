@@ -31,6 +31,7 @@ import AddPatientForm from '../components/patients/AddPatientForm';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { useAuth } from '../context/AuthContext';
 
 const MySwal = withReactContent(Swal);
 const { Title, Text } = Typography;
@@ -49,6 +50,7 @@ const PatientsPage = () => {
   
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 9;
+  const { user } = useAuth();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -231,7 +233,7 @@ const PatientsPage = () => {
         cancelText="Cancelar"
         okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
       >
-        <AddPatientForm form={form} />
+        <AddPatientForm form={form} userRole={user.rol}/>
       </Modal>
 
       <Modal 

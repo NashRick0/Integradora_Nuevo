@@ -31,6 +31,8 @@ import EditOrderForm from '../components/orders/EditOrderForm'; // Asegúrate de
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import dayjs from 'dayjs';
+import { generatePurchaseTicket } from '../utils/generatePurchaseTicket';
+import { FilePdfOutlined } from '@ant-design/icons';
 
 const MySwal = withReactContent(Swal);
 const { Title, Text } = Typography;
@@ -201,52 +203,119 @@ const OrdersPage = () => {
       )}
 
       {/* Modal para Agregar Pedido */}
-      <Modal 
-        title="Registrar Nuevo Pedido" 
-        visible={isAddModalVisible} 
-        onCancel={() => setIsAddModalVisible(false)} 
-        onOk={handleAddOk} 
-        okText="Guardar Pedido" 
-        cancelText="Cancelar"
-        width={700}
-        okButtonProps={{ style: { background: '#d9363e', borderColor: '#d9363e' } }}
-      >
-        <OrderForm form={addForm} patients={patients} analyses={analyses} />
-      </Modal>
-
-      {/* Modal para Ver Detalles */}
       <Modal
-        title={`Detalles del Pedido: ${selectedOrder?._id.slice(-6).toUpperCase()}`}
+        title={
+          selectedOrder?._id
+            ? `Detalles del Pedido: ${selectedOrder._id.slice(-6).toUpperCase()}`
+            : 'Detalles del Pedido'
+        }
         visible={isDetailsModalVisible}
         onCancel={() => setIsDetailsModalVisible(false)}
-        footer={[
-          <Button 
-            key="close"
-            onClick={() => setIsDetailsModalVisible(false)}
-            style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
-          >
-            Cerrar
-          </Button>
-        ]}
+        footer={
+          <Row justify="space-between" style={{ width: '100%' }}>
+            <Col>
+              <Button
+                key="close"
+                onClick={() => setIsDetailsModalVisible(false)}
+                style={{ background: '#d9363e', borderColor: '#d9363e', color: 'white' }}
+              >
+                Cerrar
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                key="generate"
+                icon={<FilePdfOutlined />}
+                style={{ background: '#52c41a', borderColor: '#52c41a', color: 'white' }}
+                onClick={() => {
+                  if (!selectedOrder) return;
+
+                  const ticketData = {
+                    id: selectedOrder._id,
+                    nombrePaciente: selectedOrder.usuarioId
+                      ? `${selectedOrder.usuarioId.nombre || ''} ${selectedOrder.usuarioId.apellidoPaterno || ''}`.trim()
+                      : 'Paciente Desconocido',
+                    fecha: selectedOrder.fechaCreacion || null,
+                    total: Number(selectedOrder.total) || 0,
+                    pagado: Number(selectedOrder.anticipo?.monto) || 0,
+                    faltaPorPagar:
+                      (Number(selectedOrder.total) || 0) - (Number(selectedOrder.anticipo?.monto) || 0),
+                    estudios: (selectedOrder.analisis || []).map((a) => ({
+                      nombre: a.nombre || 'Análisis sin nombre',
+                      precio: Number(a.precio) || 0,
+                    })),
+                  };
+
+                  generatePurchaseTicket(ticketData);
+                }}
+              >
+                Generar Ticket de Compra
+              </Button>
+            </Col>
+          </Row>
+        }
         width={600}
-      >
-        {selectedOrder && (
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Paciente">{`${selectedOrder.usuarioId.nombre} ${selectedOrder.usuarioId.apellidoPaterno}`}</Descriptions.Item>
-            <Descriptions.Item label="Fecha de Creación">{dayjs(selectedOrder.fechaCreacion).format('DD/MM/YYYY HH:mm')}</Descriptions.Item>
-            <Descriptions.Item label="Estado del Pedido"><Tag color="blue">{selectedOrder.estado.toUpperCase()}</Tag></Descriptions.Item>
-            <Descriptions.Item label="Análisis Solicitados">
-              {selectedOrder.analisis.map(a => (<div key={a.analisisId}>{a.nombre} - ${a.precio}</div>))}
-            </Descriptions.Item>
-            <Descriptions.Item label="Subtotal">${selectedOrder.subtotal}</Descriptions.Item>
-            <Descriptions.Item label="Descuento">{selectedOrder.porcentajeDescuento}%</Descriptions.Item>
-            <Descriptions.Item label="Total">${selectedOrder.total}</Descriptions.Item>
-            <Descriptions.Item label="Anticipo">${selectedOrder.anticipo.monto}</Descriptions.Item>
-            <Descriptions.Item label="Saldo Pendiente">${selectedOrder.total - selectedOrder.anticipo.monto}</Descriptions.Item>
-            <Descriptions.Item label="Notas">{selectedOrder.notas}</Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
+    >
+      {selectedOrder && (
+        <Descriptions bordered column={1} size="small">
+          <Descriptions.Item label="Paciente">
+            {selectedOrder.usuarioId
+              ? `${selectedOrder.usuarioId.nombre || ''} ${selectedOrder.usuarioId.apellidoPaterno || ''}`
+              : 'No disponible'}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Fecha de Creación">
+            {selectedOrder.fechaCreacion
+              ? dayjs(selectedOrder.fechaCreacion).format('DD/MM/YYYY HH:mm')
+              : 'No disponible'}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Estado del Pedido">
+            <Tag color="blue">{selectedOrder.estado?.toUpperCase() || 'N/A'}</Tag>
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Análisis Solicitados">
+            {(selectedOrder.analisis && selectedOrder.analisis.length > 0) ? (
+              selectedOrder.analisis.map((a, idx) => (
+                <div key={idx}>
+                  {a.nombre || 'Análisis sin nombre'} - ${a.precio ?? '0.00'}
+                </div>
+              ))
+            ) : (
+              'Sin análisis registrados'
+            )}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Subtotal">
+            ${selectedOrder.subtotal ?? '0.00'}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Descuento">
+            {selectedOrder.porcentajeDescuento ?? 0}%
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Total">
+            ${selectedOrder.total ?? '0.00'}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Anticipo">
+            ${selectedOrder.anticipo?.monto ?? '0.00'}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Saldo Pendiente">
+            ${(
+              (selectedOrder.total ?? 0) - 
+              (selectedOrder.anticipo?.monto ?? 0)
+            ).toFixed(2)}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Notas">
+            {selectedOrder.notas || 'Sin notas'}
+          </Descriptions.Item>
+        </Descriptions>
+      )}
+
+    </Modal>
 
       {/* Modal para Editar Pedido */}
       <Modal
